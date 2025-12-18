@@ -1,0 +1,46 @@
+{
+  "name": "heyi",
+  "version": "1.0.0",
+  "description": "CLI tool to execute AI prompts with flexible output formatting",
+  "keywords": [
+    "ai",
+    "cli",
+    "openrouter",
+    "llm",
+    "prompt"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "bin": "./bin/index.js",
+  "files": [
+    "bin",
+    "src"
+  ],
+  "scripts": {
+    "eslint": "eslint \"**/*.js\"",
+    "format": "npm run eslint -- --fix && npm run prettier -- --write",
+    "lint": "npm run eslint && npm run prettier -- --check",
+    "prettier": "prettier --ignore-path .gitignore \"**/*.{js,json,md,yml}\"",
+    "start": "./bin/index.js",
+    "test": "npm run lint"
+  },
+  "dependencies": {
+    "@openrouter/ai-sdk-provider": "^1.5.3",
+    "ai": "^5.0.113",
+    "commander": "^14.0.2",
+    "dotenv": "^14.3.2",
+    "zod": "^4.2.0"
+  },
+  "devDependencies": {
+    "@electerious/eslint-config": "^5.2.1",
+    "@electerious/prettier-config": "^4.0.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.7.4"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "authors": [
+    "Tobias Reich <tobias@electerious.com>"
+  ]
+}
