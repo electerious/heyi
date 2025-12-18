@@ -1,6 +1,6 @@
 {
   "name": "heyi",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "CLI tool to execute AI prompts with flexible output formatting",
   "keywords": [
     "ai",
