@@ -15,7 +15,7 @@ npm install heyi -g
 ### CLI
 
 ```sh
-heyi <prompt> [options]
+heyi [prompt] [options]
 ```
 
 #### Options
@@ -23,6 +23,7 @@ heyi <prompt> [options]
 - `-m, --model <model>` - AI model to use (default: `openai/gpt-4o-mini`)
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
+- `--file <path>` - Read content from file and include as context
 - `-h, --help` - Display help information
 - `-V, --version` - Display version number
 
@@ -57,6 +58,13 @@ MODEL=perplexity/sonar heyi "Explain AI"
 
 # Set API key via environment variable
 API_KEY=your-key heyi "Hello, AI!"
+
+# Input from file as context
+heyi "Summarize this content" --file input.txt
+
+# Input from stdin
+cat article.md | heyi "Extract all URLs mentioned"
+echo "Analyze this text" | heyi
 ```
 
 ## Output Formats
