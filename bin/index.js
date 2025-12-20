@@ -38,7 +38,7 @@ const action = async (prompt, options) => {
 
     // Handle file content as context
     const fileContents = []
-    if (options.file && options.file.length > 0) {
+    if (options.file) {
       for (const filePath of options.file) {
         const content = await readFileContent(filePath)
         fileContents.push({ path: filePath, content })
@@ -94,7 +94,6 @@ program
     (value, previous) => {
       return previous ? [...previous, value] : [value]
     },
-    [],
   )
   .addHelpText('after', helpText)
   .action(action)
