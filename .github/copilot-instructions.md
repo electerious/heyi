@@ -53,3 +53,8 @@ When changing CLI options, update:
 
 - [bin/index.js](../bin/index.js) - Commander.js options and help text
 - [README.md](../README.md) - Usage documentation and examples
+
+When changing anything related to how the user interacts or uses the tool, update:
+
+- [README.md](../README.md) - Ensure documentation reflects changes
+- [CHANGELOG.md](../CHANGELOG.md) - Add relevant changelog entry
