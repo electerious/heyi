@@ -25,6 +25,7 @@ heyi [prompt] [options]
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
 - `--file <path>` - Read content from file and include as context (can be used multiple times)
 - `--url <url>` - Fetch content from URL and include as context (can be used multiple times)
+- `--var <key=value>` - Define variables for replacement in prompt using `{{key}}` syntax (can be used multiple times)
 - `-h, --help` - Display help information
 - `-V, --version` - Display version number
 
@@ -53,6 +54,13 @@ heyi "Analyze: revenue 100k, costs 60k" --format object --schema "z.object({reve
 
 # Complex nested schema
 heyi "Analyze top 3 tech companies" --format array --schema "z.object({name:z.string(),founded:z.number(),products:z.array(z.string())})"
+
+# Variable replacement in prompts
+heyi "preset in {{language}}" --var language="German"
+heyi "preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+
+# Variable replacement with stdin
+echo "Translate to {{lang}}" | heyi --var lang="Spanish"
 
 # Set default model via environment variable
 MODEL=perplexity/sonar heyi "Explain AI"

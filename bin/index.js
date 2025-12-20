@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
 import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
@@ -18,6 +19,11 @@ Examples:
   $ heyi "List 5 programming languages" --format array --schema "z.string()"
   $ heyi "Analyze this data" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
   $ heyi "List 3 countries" --format array --schema "z.object({name:z.string(),capital:z.string()})"
+
+  # Variable replacement
+  $ heyi "preset in {{language}}" --var language="German"
+  $ heyi "preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+  $ echo "Translate to {{lang}}" | heyi --var lang="Spanish"
 
   # Environment variables
   $ MODEL=perplexity/sonar heyi "Explain AI"
@@ -70,6 +76,11 @@ const action = async (prompt, options) => {
     // Build the final prompt
     let finalPrompt = prompt ?? stdinContent
 
+    // Replace variables in the prompt
+    if (options.var) {
+      finalPrompt = replaceVariables(finalPrompt, options.var)
+    }
+
     // Combine file and URL contexts
     const allContexts = [...fileContents, ...urlContents]
     if (allContexts.length > 0) {
@@ -115,6 +126,19 @@ program
     (value, previous) => {
       return previous ? [...previous, value] : [value]
     },
+  )
+  .option(
+    '--var <key=value>',
+    'Define variables for replacement in prompt using {{key}} syntax (can be used multiple times)',
+    (value, previous) => {
+      const [key, ...valueParts] = value.split('=')
+      const variableValue = valueParts.join('=') // Handle values with = in them
+      if (!key || variableValue === undefined) {
+        throw new Error(`Invalid --var format: '${value}'. Expected format: key=value`)
+      }
+      return { ...previous, [key]: variableValue }
+    },
+    {},
   )
   .addHelpText('after', helpText)
   .action(action)
