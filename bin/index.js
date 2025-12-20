@@ -25,6 +25,7 @@ Examples:
 
   # Input from stdin or file
   $ heyi "Summarize this content" --file input.txt
+  $ heyi "Compare these files" --file a.txt --file b.txt
   $ cat prompt.txt | heyi
 `
 
@@ -36,9 +37,12 @@ const action = async (prompt, options) => {
     }
 
     // Handle file content as context
-    let fileContent = null
-    if (options.file) {
-      fileContent = await readFileContent(options.file)
+    const fileContents = []
+    if (options.file && options.file.length > 0) {
+      for (const filePath of options.file) {
+        const content = await readFileContent(filePath)
+        fileContents.push({ path: filePath, content })
+      }
     }
 
     // Handle stdin input
@@ -54,8 +58,9 @@ const action = async (prompt, options) => {
 
     // Build the final prompt
     let finalPrompt = prompt ?? stdinContent
-    if (fileContent) {
-      finalPrompt = `${finalPrompt}\n\nContext from file:\n${fileContent}`
+    if (fileContents.length > 0) {
+      const fileContexts = fileContents.map(({ path, content }) => `File: ${path}\n${content}`).join('\n\n---\n\n')
+      finalPrompt = `${finalPrompt}\n\nContext from files:\n${fileContexts}`
     }
 
     const result = await executePrompt(finalPrompt, {
@@ -82,7 +87,14 @@ program
   .option('-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL)
   .option('-f, --format <format>', 'Output format: string, number, object, array', 'string')
   .option('-s, --schema <schema>', 'Zod schema for object/array format (required when format is object or array)')
-  .option('--file <path>', 'Read content from file and include as context')
+  .option(
+    '--file <path>',
+    'Read content from file and include as context (can be used multiple times)',
+    (value, previous) => {
+      return previous ? [...previous, value] : [value]
+    },
+    [],
+  )
   .addHelpText('after', helpText)
   .action(action)
   .parse()
