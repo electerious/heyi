@@ -73,6 +73,8 @@ export const fetchUrlContent = async (url) => {
     const cleanText = sanitizeHtml(html, {
       allowedTags: [],
       allowedAttributes: {},
+      allowedSchemes: [],
+      allowedSchemesAppliedToAttributes: [],
     })
     return cleanText.trim()
   } catch (error) {
