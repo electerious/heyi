@@ -3,7 +3,7 @@
 import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
-import { hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
@@ -23,9 +23,11 @@ Examples:
   $ MODEL=perplexity/sonar heyi "Explain AI"
   $ API_KEY=your-key heyi "Hello, AI!"
 
-  # Input from stdin or file
+  # Input from stdin, files, or URLs
   $ heyi "Summarize this content" --file input.txt
   $ heyi "Compare these files" --file a.txt --file b.txt
+  $ heyi "Summarize this article" --url https://example.com/article.html
+  $ heyi "Compare these sources" --file local.txt --url https://example.com/remote.txt
   $ cat prompt.txt | heyi
 `
 
@@ -45,6 +47,15 @@ const action = async (prompt, options) => {
       }
     }
 
+    // Handle URL content as context
+    const urlContents = []
+    if (options.url) {
+      for (const url of options.url) {
+        const content = await fetchUrlContent(url)
+        urlContents.push({ path: url, content })
+      }
+    }
+
     // Handle stdin input
     let stdinContent = null
     if (hasStdinData()) {
@@ -58,10 +69,13 @@ const action = async (prompt, options) => {
 
     // Build the final prompt
     let finalPrompt = prompt ?? stdinContent
-    if (fileContents.length > 0) {
-      const fileContexts = fileContents.map(({ path, content }) => `File: ${path}\n${content}`).join('\n\n---\n\n')
-      const contextLabel = fileContents.length === 1 ? 'Context from file:' : 'Context from files:'
-      finalPrompt = `${finalPrompt}\n\n${contextLabel}\n${fileContexts}`
+
+    // Combine file and URL contexts
+    const allContexts = [...fileContents, ...urlContents]
+    if (allContexts.length > 0) {
+      const contextItems = allContexts.map(({ path, content }) => `Source: ${path}\n${content}`).join('\n\n---\n\n')
+      const contextLabel = allContexts.length === 1 ? 'Context from source:' : 'Context from sources:'
+      finalPrompt = `${finalPrompt}\n\n${contextLabel}\n${contextItems}`
     }
 
     const result = await executePrompt(finalPrompt, {
@@ -91,6 +105,13 @@ program
   .option(
     '--file <path>',
     'Read content from file and include as context (can be used multiple times)',
+    (value, previous) => {
+      return previous ? [...previous, value] : [value]
+    },
+  )
+  .option(
+    '--url <url>',
+    'Fetch content from URL and include as context (can be used multiple times)',
     (value, previous) => {
       return previous ? [...previous, value] : [value]
     },

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
+import sanitizeHtml from 'sanitize-html'
 
 /**
  * Read content from a file.
@@ -53,4 +54,30 @@ export const readStdin = () => {
  */
 export const hasStdinData = () => {
   return !process.stdin.isTTY
+}
+
+/**
+ * Fetch content from a URL.
+ *
+ * @param {string} url - URL to fetch content from
+ * @returns {Promise<string>} The URL content
+ */
+export const fetchUrlContent = async (url) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    const html = await response.text()
+    // Sanitize HTML to extract only text content and avoid large data
+    const cleanText = sanitizeHtml(html, {
+      allowedTags: [],
+      allowedAttributes: {},
+      allowedSchemes: [],
+      allowedSchemesAppliedToAttributes: [],
+    })
+    return cleanText.trim()
+  } catch (error) {
+    throw new Error(`Failed to fetch URL '${url}'`, { cause: error })
+  }
 }
