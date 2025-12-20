@@ -24,6 +24,7 @@ heyi [prompt] [options]
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
 - `--file <path>` - Read content from file and include as context (can be used multiple times)
+- `--url <url>` - Fetch content from URL and include as context (can be used multiple times)
 - `-h, --help` - Display help information
 - `-V, --version` - Display version number
 
@@ -65,6 +66,15 @@ heyi "Summarize this content" --file input.txt
 # Input from multiple files as context
 heyi "Compare these files" --file file1.txt --file file2.txt
 heyi "Analyze all these documents" --file doc1.md --file doc2.md --file doc3.md
+
+# Input from URL as context
+heyi "Summarize this article" --url https://example.com/article.html
+
+# Input from multiple URLs as context
+heyi "Compare these articles" --url https://example.com/article1.html --url https://example.com/article2.html
+
+# Mix files and URLs as context
+heyi "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
 
 # Input from stdin
 cat article.md | heyi "Extract all URLs mentioned"

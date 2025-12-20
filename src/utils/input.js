@@ -54,3 +54,21 @@ export const readStdin = () => {
 export const hasStdinData = () => {
   return !process.stdin.isTTY
 }
+
+/**
+ * Fetch content from a URL.
+ *
+ * @param {string} url - URL to fetch content from
+ * @returns {Promise<string>} The URL content
+ */
+export const fetchUrlContent = async (url) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+    return await response.text()
+  } catch (error) {
+    throw new Error(`Failed to fetch URL '${url}'`, { cause: error })
+  }
+}
