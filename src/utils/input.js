@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
+import sanitizeHtml from 'sanitize-html'
 
 /**
  * Read content from a file.
@@ -67,7 +68,13 @@ export const fetchUrlContent = async (url) => {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     }
-    return await response.text()
+    const html = await response.text()
+    // Sanitize HTML to extract only text content and avoid large data
+    const cleanText = sanitizeHtml(html, {
+      allowedTags: [],
+      allowedAttributes: {},
+    })
+    return cleanText.trim()
   } catch (error) {
     throw new Error(`Failed to fetch URL '${url}'`, { cause: error })
   }
