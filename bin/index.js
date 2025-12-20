@@ -60,7 +60,8 @@ const action = async (prompt, options) => {
     let finalPrompt = prompt ?? stdinContent
     if (fileContents.length > 0) {
       const fileContexts = fileContents.map(({ path, content }) => `File: ${path}\n${content}`).join('\n\n---\n\n')
-      finalPrompt = `${finalPrompt}\n\nContext from files:\n${fileContexts}`
+      const contextLabel = fileContents.length === 1 ? 'Context from file:' : 'Context from files:'
+      finalPrompt = `${finalPrompt}\n\n${contextLabel}\n${fileContexts}`
     }
 
     const result = await executePrompt(finalPrompt, {
