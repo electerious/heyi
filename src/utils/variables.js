@@ -6,14 +6,10 @@
  * @returns {string} The prompt with variables replaced
  */
 export const replaceVariables = (prompt, variables = {}) => {
-  if (!variables || Object.keys(variables).length === 0) {
-    return prompt
-  }
-
   let result = prompt
 
-  for (const [key, value] of Object.entries(variables)) {
-    const pattern = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+  for (const [variable, value] of Object.entries(variables)) {
+    const pattern = new RegExp(`{{\\s*${variable}\\s*}}`, 'g')
     result = result.replace(pattern, value)
   }
 

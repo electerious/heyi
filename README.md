@@ -56,8 +56,8 @@ heyi "Analyze: revenue 100k, costs 60k" --format object --schema "z.object({reve
 heyi "Analyze top 3 tech companies" --format array --schema "z.object({name:z.string(),founded:z.number(),products:z.array(z.string())})"
 
 # Variable replacement in prompts
-heyi "preset in {{language}}" --var language="German"
-heyi "preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+heyi "Preset in {{language}}" --var language="German"
+heyi "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
 
 # Variable replacement with stdin
 echo "Translate to {{lang}}" | heyi --var lang="Spanish"
