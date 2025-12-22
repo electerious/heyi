@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import { APICallError } from 'ai'
 import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
@@ -94,15 +93,7 @@ const action = async (prompt, options) => {
 
     console.log(result)
   } catch (error) {
-    if (error instanceof APICallError) {
-      const relevantFields = Object.keys(error).filter(
-        (key) => ['stack', 'isRetryable', 'data'].includes(key) === false,
-      )
-      const relevantError = Object.fromEntries(relevantFields.map((key) => [key, error[key]]))
-      console.error(relevantError)
-    } else {
-      console.error(error)
-    }
+    console.error(error)
 
     process.exit(1)
   }
