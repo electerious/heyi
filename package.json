@@ -9,6 +9,11 @@
     "llm",
     "prompt"
   ],
+  "homepage": "https://github.com/electerious/heyi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/electerious/heyi.git"
+  },
   "license": "MIT",
   "type": "module",
   "bin": "./bin/index.js",

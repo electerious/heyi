@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
 import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
@@ -19,6 +20,11 @@ Examples:
   $ heyi "Analyze this data" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
   $ heyi "List 3 countries" --format array --schema "z.object({name:z.string(),capital:z.string()})"
 
+  # Variable replacement
+  $ heyi "Preset in {{language}}" --var language="German"
+  $ heyi "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+  $ echo "Translate to {{lang}}" | heyi --var lang="Spanish"
+
   # Environment variables
   $ MODEL=perplexity/sonar heyi "Explain AI"
   $ API_KEY=your-key heyi "Hello, AI!"
@@ -33,6 +39,11 @@ Examples:
 
 const action = async (prompt, options) => {
   try {
+    // Set defaults
+    options.file = options.file ?? []
+    options.url = options.url ?? []
+    options.var = options.var ?? {}
+
     // Validate that schema is provided for object/array formats
     if ((options.format === 'object' || options.format === 'array') && !options.schema) {
       throw new Error(`--schema or -s is required when format is '${options.format}'`)
@@ -40,20 +51,16 @@ const action = async (prompt, options) => {
 
     // Handle file content as context
     const fileContents = []
-    if (options.file) {
-      for (const filePath of options.file) {
-        const content = await readFileContent(filePath)
-        fileContents.push({ path: filePath, content })
-      }
+    for (const filePath of options.file) {
+      const content = await readFileContent(filePath)
+      fileContents.push({ path: filePath, content })
     }
 
     // Handle URL content as context
     const urlContents = []
-    if (options.url) {
-      for (const url of options.url) {
-        const content = await fetchUrlContent(url)
-        urlContents.push({ path: url, content })
-      }
+    for (const url of options.url) {
+      const content = await fetchUrlContent(url)
+      urlContents.push({ path: url, content })
     }
 
     // Handle stdin input
@@ -67,8 +74,8 @@ const action = async (prompt, options) => {
       throw new Error('A prompt is required. Provide it as an argument or via stdin.')
     }
 
-    // Build the final prompt
-    let finalPrompt = prompt ?? stdinContent
+    // Build the prompt and prefer the argument over stdin
+    let finalPrompt = replaceVariables(prompt ?? stdinContent, options.var)
 
     // Combine file and URL contexts
     const allContexts = [...fileContents, ...urlContents]
@@ -114,6 +121,20 @@ program
     'Fetch content from URL and include as context (can be used multiple times)',
     (value, previous) => {
       return previous ? [...previous, value] : [value]
+    },
+  )
+  .option(
+    '--var <variable=value>',
+    'Define variables for replacement in prompt using {{variable}} syntax (can be used multiple times)',
+    (value, previous) => {
+      const [variable, ...variableValueParts] = value.split('=')
+      const variableValue = variableValueParts.join('=') // Handle values with = in them
+
+      if (!variable) {
+        throw new Error(`Invalid --var format: '${value}'. Expected format: variable=value`)
+      }
+
+      return { ...previous, [variable]: variableValue }
     },
   )
   .addHelpText('after', helpText)
