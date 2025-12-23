@@ -4,6 +4,7 @@ import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
 import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { loadPreset } from '../src/utils/preset.js'
 import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
@@ -35,14 +36,46 @@ Examples:
   $ heyi "Summarize this article" --url https://example.com/article.html
   $ heyi "Compare these sources" --file local.txt --url https://example.com/remote.txt
   $ cat prompt.txt | heyi
+
+  # Preset files
+  $ heyi preset file.json
+  $ heyi preset file.json --var language=german
+  $ heyi preset file.json --model model2
+  $ heyi preset file.json --file additional.txt
 `
 
-const action = async (prompt, options) => {
+const action = async (prompt, presetFile, options) => {
   try {
     // Set defaults
     options.file = options.file ?? []
     options.url = options.url ?? []
     options.var = options.var ?? {}
+
+    let preset = null
+
+    // Check if using preset mode: "heyi preset file.json"
+    if (prompt === 'preset') {
+      if (!presetFile) {
+        throw new Error('Preset file path is required when using "preset" command')
+      }
+      preset = await loadPreset(presetFile)
+
+      // Use prompt from preset
+      prompt = preset.prompt
+
+      // Merge model: CLI flag overrides preset
+      // Check if --model or -m was explicitly provided in command line
+      const modelFlagProvided = process.argv.includes('--model') || process.argv.includes('-m')
+      if (!modelFlagProvided && preset.model) {
+        options.model = preset.model
+      }
+
+      // Merge files: append preset files to CLI files
+      options.file = [...preset.files, ...options.file]
+
+      // Merge URLs: append preset URLs to CLI URLs
+      options.url = [...preset.urls, ...options.url]
+    }
 
     // Validate that schema is provided for object/array formats
     if ((options.format === 'object' || options.format === 'array') && !options.schema) {
@@ -103,7 +136,8 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version)
-  .argument('[prompt]', 'The AI prompt to execute (optional when using stdin)')
+  .argument('[prompt]', 'The AI prompt to execute, or "preset" to load from a preset file (optional when using stdin)')
+  .argument('[presetFile]', 'Path to preset JSON file (required when first argument is "preset")')
   .option('-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL)
   .option('-f, --format <format>', 'Output format: string, number, object, array', 'string')
   .option('-s, --schema <schema>', 'Zod schema for object/array format (required when format is object or array)')
