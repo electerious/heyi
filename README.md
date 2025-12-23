@@ -87,6 +87,79 @@ heyi "Compare local and remote content" --file local.txt --url https://example.c
 # Input from stdin
 cat article.md | heyi "Extract all URLs mentioned"
 echo "Analyze this text" | heyi
+
+# Preset files
+heyi preset config.json
+heyi preset config.json --var language=german
+heyi preset config.json --model openai/gpt-4o
+heyi preset config.json --file additional.txt --url https://example.com
+```
+
+## Preset Files
+
+Preset files allow you to define reusable configurations with prompts, models, files, and URLs. Create a JSON file with the following structure:
+
+```json
+{
+  "prompt": "Your prompt with {{variables}}",
+  "model": "openai/gpt-4o-mini",
+  "files": ["path/to/file1.txt", "path/to/file2.txt"],
+  "urls": ["https://example.com/page.html"]
+}
+```
+
+### Preset Configuration
+
+- **prompt** (optional): The AI prompt to execute. Supports variable replacement using `{{variable}}` syntax.
+- **model** (optional): AI model to use (e.g., `openai/gpt-4o-mini`, `google/gemini-2.0-flash-exp`).
+- **files** (optional): Array of file paths to include as context.
+- **urls** (optional): Array of URLs to fetch and include as context.
+
+### Preset Examples
+
+**Basic preset with variables:**
+
+```json
+{
+  "prompt": "Explain {{topic}} in {{language}}",
+  "model": "openai/gpt-4o-mini"
+}
+```
+
+```sh
+heyi preset explain.json --var topic="quantum computing" --var language="simple terms"
+```
+
+**Preset with files and URLs:**
+
+```json
+{
+  "prompt": "Analyze and compare the following documents",
+  "model": "google/gemini-2.0-flash-exp",
+  "files": ["report1.txt", "report2.txt"],
+  "urls": ["https://example.com/data.html"]
+}
+```
+
+```sh
+heyi preset analyze.json
+```
+
+### CLI Override Behavior
+
+- **Model override**: Using `--model` flag overrides the model specified in the preset file.
+- **Files and URLs append**: Using `--file` or `--url` flags adds additional context to the preset's files and URLs.
+- **Variables**: Use `--var` to replace variables in the preset's prompt.
+
+```sh
+# Override model from preset
+heyi preset config.json --model openai/gpt-4o
+
+# Add additional files to preset's files
+heyi preset config.json --file extra.txt
+
+# Replace variables in preset prompt
+heyi preset config.json --var name="Alice" --var role="developer"
 ```
 
 ## Output Formats
