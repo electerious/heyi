@@ -35,7 +35,7 @@ export const loadPreset = async (filePath) => {
       throw new Error(`Preset file not found: '${filePath}'`)
     }
     if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in preset file '${filePath}'`, { cause: error })
+      throw new Error(`Invalid JSON in preset file '${filePath}': ${error.message}`)
     }
     throw error
   }

@@ -60,13 +60,23 @@ const action = async (prompt, presetFile, options) => {
       }
       preset = await loadPreset(presetFile)
 
+      // Validate that preset has a prompt
+      if (!preset.prompt) {
+        throw new Error('Preset file must contain a "prompt" field')
+      }
+
       // Use prompt from preset
       prompt = preset.prompt
 
       // Merge model: CLI flag overrides preset
       // Check if --model or -m was explicitly provided in command line
-      const modelFlagProvided = process.argv.includes('--model') || process.argv.includes('-m')
-      if (!modelFlagProvided && preset.model) {
+      // Look for the flag in argv, handling both --model value and -m value formats
+      const hasModelFlag = process.argv.some((arg) => {
+        if (arg === '--model' || arg === '-m') return true
+        if (arg.startsWith('--model=')) return true
+        return false
+      })
+      if (!hasModelFlag && preset.model) {
         options.model = preset.model
       }
 
