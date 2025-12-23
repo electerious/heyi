@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
+import { z } from 'zod'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
-import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { hasFlag } from '../src/utils/argv.js'
+import { hasStdinData, readStdin } from '../src/utils/input.js'
+import { loadPreset } from '../src/utils/preset.js'
+import { buildPrompt } from '../src/utils/prompt.js'
 import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
+
+const hasModelFlag = hasFlag(['--model', '-m'])
+const hasFormatFlag = hasFlag(['--format', '-f'])
+const hasSchemaFlag = hasFlag(['--schema', '-s'])
 
 const program = new Command()
 
@@ -35,32 +43,65 @@ Examples:
   $ heyi "Summarize this article" --url https://example.com/article.html
   $ heyi "Compare these sources" --file local.txt --url https://example.com/remote.txt
   $ cat prompt.txt | heyi
+
+  # Preset files
+  $ heyi preset file.json
+  $ heyi preset file.json --var language=german
+  $ heyi preset file.json --model model2
+  $ heyi preset file.json --file additional.txt
 `
 
-const action = async (prompt, options) => {
+const optionsSchema = z
+  .object({
+    model: z.string(),
+    format: z.enum(['string', 'number', 'object', 'array']),
+    schema: z.string().optional(),
+    files: z.array(z.string()).default([]),
+    urls: z.array(z.string()).default([]),
+    vars: z.record(z.string(), z.string()).default({}),
+  })
+  .refine((data) => !['object', 'array'].includes(data.format) || data.schema, {
+    message: '--schema or -s is required when format is object or array',
+    path: ['schema'],
+  })
+
+const action = async (prompt, presetFile, flags) => {
   try {
-    // Set defaults
-    options.file = options.file ?? []
-    options.url = options.url ?? []
-    options.var = options.var ?? {}
+    // Build options from flags
+    let options = optionsSchema.parse({
+      model: flags.model,
+      format: flags.format,
+      schema: flags.schema,
+      files: flags.file,
+      urls: flags.url,
+      vars: flags.var,
+    })
 
-    // Validate that schema is provided for object/array formats
-    if ((options.format === 'object' || options.format === 'array') && !options.schema) {
-      throw new Error(`--schema or -s is required when format is '${options.format}'`)
+    // Validate that preset file is provided when using preset mode
+    if (prompt === 'preset' && !presetFile) {
+      throw new Error('Preset file path is required when using "preset" command')
     }
 
-    // Handle file content as context
-    const fileContents = []
-    for (const filePath of options.file) {
-      const content = await readFileContent(filePath)
-      fileContents.push({ path: filePath, content })
-    }
+    // Check if using preset mode
+    if (prompt === 'preset') {
+      const preset = await loadPreset(presetFile)
 
-    // Handle URL content as context
-    const urlContents = []
-    for (const url of options.url) {
-      const content = await fetchUrlContent(url)
-      urlContents.push({ path: url, content })
+      // Use prompt from preset
+      prompt = preset.prompt
+
+      // Update options with preset values
+      options = optionsSchema.parse({
+        // Overwrite model, format, schema only if not provided via flags
+        model: hasModelFlag ? options.model : (preset.model ?? options.model),
+        format: hasFormatFlag ? options.format : (preset.format ?? options.format),
+        schema: hasSchemaFlag ? options.schema : (preset.schema ?? options.schema),
+        // Merge files
+        files: [...preset.files, ...options.files],
+        // Merge URLs
+        urls: [...preset.urls, ...options.urls],
+        // Keep vars as is
+        vars: options.vars,
+      })
     }
 
     // Handle stdin input
@@ -75,15 +116,8 @@ const action = async (prompt, options) => {
     }
 
     // Build the prompt and prefer the argument over stdin
-    let finalPrompt = replaceVariables(prompt ?? stdinContent, options.var)
-
-    // Combine file and URL contexts
-    const allContexts = [...fileContents, ...urlContents]
-    if (allContexts.length > 0) {
-      const contextItems = allContexts.map(({ path, content }) => `Source: ${path}\n${content}`).join('\n\n---\n\n')
-      const contextLabel = allContexts.length === 1 ? 'Context from source:' : 'Context from sources:'
-      finalPrompt = `${finalPrompt}\n\n${contextLabel}\n${contextItems}`
-    }
+    const userPrompt = replaceVariables(prompt ?? stdinContent, options.vars)
+    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls)
 
     const result = await executePrompt(finalPrompt, {
       model: options.model,
@@ -103,7 +137,8 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version)
-  .argument('[prompt]', 'The AI prompt to execute (optional when using stdin)')
+  .argument('[prompt]', 'The AI prompt to execute, or "preset" to load from a preset file (optional when using stdin)')
+  .argument('[presetFile]', 'Path to preset JSON file (required when first argument is "preset")')
   .option('-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL)
   .option('-f, --format <format>', 'Output format: string, number, object, array', 'string')
   .option('-s, --schema <schema>', 'Zod schema for object/array format (required when format is object or array)')
