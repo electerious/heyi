@@ -1,4 +1,14 @@
 import { readFile } from 'node:fs/promises'
+import { z } from 'zod'
+
+const presetSchema = z.object({
+  prompt: z.string(),
+  model: z.string().optional(),
+  format: z.enum(['string', 'number', 'object', 'array']).optional(),
+  schema: z.string().optional(),
+  files: z.array(z.string()).default([]),
+  urls: z.array(z.string()).default([]),
+})
 
 /**
  * Load and parse a preset JSON file.
@@ -11,32 +21,12 @@ export const loadPreset = async (filePath) => {
     const content = await readFile(filePath, 'utf8')
     const preset = JSON.parse(content)
 
-    // Validate preset structure
-    if (typeof preset !== 'object' || preset === null) {
-      throw new Error('Preset file must contain a JSON object')
-    }
-
-    // Normalize arrays
-    if (preset.files && !Array.isArray(preset.files)) {
-      throw new Error('Preset "files" field must be an array')
-    }
-    if (preset.urls && !Array.isArray(preset.urls)) {
-      throw new Error('Preset "urls" field must be an array')
-    }
-
-    return {
-      prompt: preset.prompt ?? null,
-      model: preset.model ?? null,
-      files: preset.files ?? [],
-      urls: preset.urls ?? [],
-    }
+    return presetSchema.parse(preset)
   } catch (error) {
     if (error.code === 'ENOENT') {
-      throw new Error(`Preset file not found: '${filePath}'`)
+      throw new Error(`Preset file '${filePath}' not found`, { cause: error })
     }
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in preset file '${filePath}': ${error.message}`)
-    }
-    throw error
+
+    throw new Error(`Error while parsing preset file '${filePath}'`, { cause: error })
   }
 }

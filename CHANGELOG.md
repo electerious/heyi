@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Variable replacement support via `--var` option to replace placeholders in prompts using `{{variable}}` syntax
 - Support for multiple variables in a single prompt
 - Variable replacement works with both regular prompts and stdin input
+- Support for preset files to define reusable configurations with prompts, models, format, schema, files, and URLs
 
 ## [1.1.0] - 2025-12-20
 

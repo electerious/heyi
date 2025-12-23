@@ -1,13 +1,20 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
+import { z } from 'zod'
 import pkg from '../package.json' with { type: 'json' }
 import { executePrompt } from '../src/index.js'
-import { fetchUrlContent, hasStdinData, readFileContent, readStdin } from '../src/utils/input.js'
+import { hasFlag } from '../src/utils/argv.js'
+import { hasStdinData, readStdin } from '../src/utils/input.js'
 import { loadPreset } from '../src/utils/preset.js'
+import { buildPrompt } from '../src/utils/prompt.js'
 import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
+
+const hasModelFlag = hasFlag(['--model', '-m'])
+const hasFormatFlag = hasFlag(['--format', '-f'])
+const hasSchemaFlag = hasFlag(['--schema', '-s'])
 
 const program = new Command()
 
@@ -44,66 +51,57 @@ Examples:
   $ heyi preset file.json --file additional.txt
 `
 
-const action = async (prompt, presetFile, options) => {
+const optionsSchema = z
+  .object({
+    model: z.string(),
+    format: z.enum(['string', 'number', 'object', 'array']),
+    schema: z.string().optional(),
+    files: z.array(z.string()).default([]),
+    urls: z.array(z.string()).default([]),
+    vars: z.record(z.string(), z.string()).default({}),
+  })
+  .refine((data) => !['object', 'array'].includes(data.format) || data.schema, {
+    message: '--schema or -s is required when format is object or array',
+    path: ['schema'],
+  })
+
+const action = async (prompt, presetFile, flags) => {
   try {
-    // Set defaults
-    options.file = options.file ?? []
-    options.url = options.url ?? []
-    options.var = options.var ?? {}
+    // Build options from flags
+    let options = optionsSchema.parse({
+      model: flags.model,
+      format: flags.format,
+      schema: flags.schema,
+      files: flags.file,
+      urls: flags.url,
+      vars: flags.var,
+    })
 
-    let preset = null
+    // Validate that preset file is provided when using preset mode
+    if (prompt === 'preset' && !presetFile) {
+      throw new Error('Preset file path is required when using "preset" command')
+    }
 
-    // Check if using preset mode: "heyi preset file.json"
+    // Check if using preset mode
     if (prompt === 'preset') {
-      if (!presetFile) {
-        throw new Error('Preset file path is required when using "preset" command')
-      }
-      preset = await loadPreset(presetFile)
-
-      // Validate that preset has a prompt
-      if (!preset.prompt) {
-        throw new Error('Preset file must contain a "prompt" field')
-      }
+      const preset = await loadPreset(presetFile)
 
       // Use prompt from preset
       prompt = preset.prompt
 
-      // Merge model: CLI flag overrides preset
-      // Check if --model or -m was explicitly provided in command line
-      // Look for the flag in argv, handling both --model value and -m value formats
-      const hasModelFlag = process.argv.some((arg) => {
-        if (arg === '--model' || arg === '-m') return true
-        if (arg.startsWith('--model=')) return true
-        return false
+      // Update options with preset values
+      options = optionsSchema.parse({
+        // Overwrite model, format, schema only if not provided via flags
+        model: hasModelFlag ? options.model : (preset.model ?? options.model),
+        format: hasFormatFlag ? options.format : (preset.format ?? options.format),
+        schema: hasSchemaFlag ? options.schema : (preset.schema ?? options.schema),
+        // Merge files
+        files: [...preset.files, ...options.files],
+        // Merge URLs
+        urls: [...preset.urls, ...options.urls],
+        // Keep vars as is
+        vars: options.vars,
       })
-      if (!hasModelFlag && preset.model) {
-        options.model = preset.model
-      }
-
-      // Merge files: append preset files to CLI files
-      options.file = [...preset.files, ...options.file]
-
-      // Merge URLs: append preset URLs to CLI URLs
-      options.url = [...preset.urls, ...options.url]
-    }
-
-    // Validate that schema is provided for object/array formats
-    if ((options.format === 'object' || options.format === 'array') && !options.schema) {
-      throw new Error(`--schema or -s is required when format is '${options.format}'`)
-    }
-
-    // Handle file content as context
-    const fileContents = []
-    for (const filePath of options.file) {
-      const content = await readFileContent(filePath)
-      fileContents.push({ path: filePath, content })
-    }
-
-    // Handle URL content as context
-    const urlContents = []
-    for (const url of options.url) {
-      const content = await fetchUrlContent(url)
-      urlContents.push({ path: url, content })
     }
 
     // Handle stdin input
@@ -118,15 +116,8 @@ const action = async (prompt, presetFile, options) => {
     }
 
     // Build the prompt and prefer the argument over stdin
-    let finalPrompt = replaceVariables(prompt ?? stdinContent, options.var)
-
-    // Combine file and URL contexts
-    const allContexts = [...fileContents, ...urlContents]
-    if (allContexts.length > 0) {
-      const contextItems = allContexts.map(({ path, content }) => `Source: ${path}\n${content}`).join('\n\n---\n\n')
-      const contextLabel = allContexts.length === 1 ? 'Context from source:' : 'Context from sources:'
-      finalPrompt = `${finalPrompt}\n\n${contextLabel}\n${contextItems}`
-    }
+    const userPrompt = replaceVariables(prompt ?? stdinContent, options.vars)
+    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls)
 
     const result = await executePrompt(finalPrompt, {
       model: options.model,

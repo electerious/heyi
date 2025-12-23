@@ -89,10 +89,10 @@ cat article.md | heyi "Extract all URLs mentioned"
 echo "Analyze this text" | heyi
 
 # Preset files
-heyi preset config.json
-heyi preset config.json --var language=german
-heyi preset config.json --model openai/gpt-4o
-heyi preset config.json --file additional.txt --url https://example.com
+heyi preset file.json
+heyi preset file.json --var language=german
+heyi preset file.json --model openai/gpt-4o
+heyi preset file.json --file additional.txt --url https://example.com
 ```
 
 ## Preset Files
@@ -103,6 +103,8 @@ Preset files allow you to define reusable configurations with prompts, models, f
 {
   "prompt": "Your prompt with {{variables}}",
   "model": "openai/gpt-4o-mini",
+  "format": "array",
+  "schema": "z.string()",
   "files": ["path/to/file1.txt", "path/to/file2.txt"],
   "urls": ["https://example.com/page.html"]
 }
@@ -110,8 +112,10 @@ Preset files allow you to define reusable configurations with prompts, models, f
 
 ### Preset Configuration
 
-- **prompt** (optional): The AI prompt to execute. Supports variable replacement using `{{variable}}` syntax.
+- **prompt**: The AI prompt to execute. Supports variable replacement using `{{variable}}` syntax.
 - **model** (optional): AI model to use (e.g., `openai/gpt-4o-mini`, `google/gemini-2.0-flash-exp`).
+- **format** (optional): Output format: `string`, `number`, `object`, `array` (default: `string`).
+- **schema** (optional): Zod schema for object/array format (required when format is `object` or `array`).
 - **files** (optional): Array of file paths to include as context.
 - **urls** (optional): Array of URLs to fetch and include as context.
 
@@ -121,8 +125,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 
 ```json
 {
-  "prompt": "Explain {{topic}} in {{language}}",
-  "model": "openai/gpt-4o-mini"
+  "prompt": "Explain {{topic}} in {{language}}"
 }
 ```
 
@@ -145,21 +148,41 @@ heyi preset explain.json --var topic="quantum computing" --var language="simple 
 heyi preset analyze.json
 ```
 
+**Preset with structured output:**
+
+```json
+{
+  "prompt": "List programming languages mentioned in these files",
+  "format": "array",
+  "schema": "z.string()",
+  "files": ["code1.js", "code2.py"]
+}
+```
+
+```sh
+heyi preset languages.json
+```
+
 ### CLI Override Behavior
 
 - **Model override**: Using `--model` flag overrides the model specified in the preset file.
+- **Format override**: Using `--format` flag overrides the format specified in the preset file.
+- **Schema override**: Using `--schema` flag overrides the schema specified in the preset file.
 - **Files and URLs append**: Using `--file` or `--url` flags adds additional context to the preset's files and URLs.
 - **Variables**: Use `--var` to replace variables in the preset's prompt.
 
 ```sh
 # Override model from preset
-heyi preset config.json --model openai/gpt-4o
+heyi preset file.json --model openai/gpt-4o
+
+# Override format from preset
+heyi preset file.json --format object --schema "z.object({name:z.string()})"
 
 # Add additional files to preset's files
-heyi preset config.json --file extra.txt
+heyi preset file.json --file extra.txt
 
 # Replace variables in preset prompt
-heyi preset config.json --var name="Alice" --var role="developer"
+heyi preset file.json --var name="Alice" --var role="developer"
 ```
 
 ## Output Formats
