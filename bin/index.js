@@ -55,6 +55,19 @@ const program = new Command()
 
 const helpText = `
 Examples:
+  # Prompts
+  $ heyi prompt "What is the capital of France?"
+  $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
+  $ heyi help prompt
+
+  # Presets
+  $ heyi preset file.json
+  $ heyi preset file.json --model google/gemini-2.5-pro
+  $ heyi help preset
+`
+
+const promptHelpText = `
+Examples:
   $ heyi prompt "What is the capital of France?"
   $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
 
@@ -77,12 +90,23 @@ Examples:
 
   # Input from stdin
   $ cat prompt.txt | heyi prompt
+`
 
-  # Preset files
+const presetHelpText = `
+Examples:
   $ heyi preset file.json
-  $ heyi preset file.json --var language=german
   $ heyi preset file.json --model google/gemini-2.5-pro
+
+  # Overwrite options from preset
+  $ heyi preset file.json --model openai/gpt-4
+  $ heyi preset file.json --format array --schema "z.string()"
+
+  # Variable replacement
+  $ heyi preset file.json --var language=german
+
+  # Attach additional context
   $ heyi preset file.json --file additional.txt
+  $ heyi preset file.json --url https://example.com/additional.html
 `
 
 const optionsSchema = z
@@ -202,6 +226,7 @@ program
   .option(...fileFlag)
   .option(...urlFlag)
   .option(...varFlag)
+  .addHelpText('after', promptHelpText)
   .action(executePromptAction)
 
 program
@@ -213,6 +238,7 @@ program
   .option(...fileFlag)
   .option(...urlFlag)
   .option(...varFlag)
+  .addHelpText('after', presetHelpText)
   .action(executePresetAction)
 
 program.parse()
