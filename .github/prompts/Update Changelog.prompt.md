@@ -1,9 +1,9 @@
 ---
-tools: ['read/readFile', 'edit/editFiles', 'search/changes', 'search/codebase']
+tools: ['read', 'edit/editFiles', 'search']
 ---
 
-Update `CHANGELOG.md` with #changes that affect the user of the package.
+Update the [CHANGELOG](../../CHANGELOG.md) with changes that affect the user of the package.
 
-Add a new `## [Unreleased]` section (or add to existing) with relevant subsections (`### Added`, `### Changed`, `### Removed`) listing changes as bullet points. Skip internal changes that don't impact users. Match existing entry formatting.
+Use #tool:search/changes to identify what has changed.
 
-Only modify the changelog.
+Add a new `## [Unreleased]` section (or add to existing) with relevant subsections (`### Added`, `### Changed`, `### Removed`) listing changes as bullet points. Skip internal changes that don't impact users. Match existing entry formatting. Only modify the changelog.

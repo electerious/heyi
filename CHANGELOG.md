@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Variable replacement works with both regular prompts and stdin input
 - Support for preset files to define reusable configurations with prompts, models, format, schema, files, and URLs
 
+### Changed
+
+- CLI now requires explicit commands - use `heyi prompt "text"` instead of `heyi "text"` and `heyi preset file.json` for preset files
+
 ## [1.1.0] - 2025-12-20
 
 ### Added

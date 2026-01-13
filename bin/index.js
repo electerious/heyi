@@ -12,6 +12,41 @@ import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 
+const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL]
+const formatFlag = ['-f, --format <format>', 'Output format: string, number, object, array', 'string']
+const schemaFlag = [
+  '-s, --schema <schema>',
+  'Zod schema for object/array format (required when format is object or array)',
+]
+const fileFlag = [
+  '--file <path>',
+  'Read content from file and include as context (can be used multiple times)',
+  (value, previous) => {
+    return previous ? [...previous, value] : [value]
+  },
+]
+const urlFlag = [
+  '--url <url>',
+  'Fetch content from URL and include as context (can be used multiple times)',
+  (value, previous) => {
+    return previous ? [...previous, value] : [value]
+  },
+]
+const varFlag = [
+  '--var <variable=value>',
+  'Define variables for replacement in prompt using {{variable}} syntax (can be used multiple times)',
+  (value, previous) => {
+    const [variable, ...variableValueParts] = value.split('=')
+    const variableValue = variableValueParts.join('=') // Handle values with = in them
+
+    if (!variable) {
+      throw new Error(`Invalid --var format: '${value}'. Expected format: variable=value`)
+    }
+
+    return { ...previous, [variable]: variableValue }
+  },
+]
+
 const hasModelFlag = hasFlag(['--model', '-m'])
 const hasFormatFlag = hasFlag(['--format', '-f'])
 const hasSchemaFlag = hasFlag(['--schema', '-s'])
@@ -20,35 +55,58 @@ const program = new Command()
 
 const helpText = `
 Examples:
-  $ heyi "What is the capital of France?"
-  $ heyi "What is quantum computing?" --model google/gemini-2.5-pro
+  # Prompts
+  $ heyi prompt "What is the capital of France?"
+  $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
+  $ heyi help prompt
+
+  # Presets
+  $ heyi preset file.json
+  $ heyi preset file.json --model google/gemini-2.5-pro
+  $ heyi help preset
+`
+
+const promptHelpText = `
+Examples:
+  $ heyi prompt "What is the capital of France?"
+  $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
 
   # Different output formats
-  $ heyi "List 5 programming languages" --format array --schema "z.string()"
-  $ heyi "Analyze this data" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
-  $ heyi "List 3 countries" --format array --schema "z.object({name:z.string(),capital:z.string()})"
+  $ heyi prompt "List 5 programming languages" --format array --schema "z.string()"
+  $ heyi prompt "Analyze this data" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
+  $ heyi prompt "List 3 countries" --format array --schema "z.object({name:z.string(),capital:z.string()})"
 
   # Variable replacement
-  $ heyi "Preset in {{language}}" --var language="German"
-  $ heyi "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
-  $ echo "Translate to {{lang}}" | heyi --var lang="Spanish"
+  $ heyi prompt "Preset in {{language}}" --var language="German"
 
   # Environment variables
-  $ MODEL=perplexity/sonar heyi "Explain AI"
-  $ API_KEY=your-key heyi "Hello, AI!"
+  $ MODEL=perplexity/sonar heyi prompt "Explain AI"
+  $ API_KEY=your-key heyi prompt "Hello, AI!"
 
-  # Input from stdin, files, or URLs
-  $ heyi "Summarize this content" --file input.txt
-  $ heyi "Compare these files" --file a.txt --file b.txt
-  $ heyi "Summarize this article" --url https://example.com/article.html
-  $ heyi "Compare these sources" --file local.txt --url https://example.com/remote.txt
-  $ cat prompt.txt | heyi
+  # Attach context
+  $ heyi prompt "Summarize this content" --file input.txt
+  $ heyi prompt "Compare these files" --file a.txt --file b.txt
+  $ heyi prompt "Summarize this article" --url https://example.com/article.html
 
-  # Preset files
+  # Input from stdin
+  $ cat prompt.txt | heyi prompt
+`
+
+const presetHelpText = `
+Examples:
   $ heyi preset file.json
+  $ heyi preset file.json --model google/gemini-2.5-pro
+
+  # Overwrite options from preset
+  $ heyi preset file.json --model openai/gpt-4
+  $ heyi preset file.json --format array --schema "z.string()"
+
+  # Variable replacement
   $ heyi preset file.json --var language=german
-  $ heyi preset file.json --model model2
+
+  # Attach additional context
   $ heyi preset file.json --file additional.txt
+  $ heyi preset file.json --url https://example.com/additional.html
 `
 
 const optionsSchema = z
@@ -65,45 +123,34 @@ const optionsSchema = z
     path: ['schema'],
   })
 
-const action = async (prompt, presetFile, flags) => {
+const flagsToOptions = (flags) => {
+  return optionsSchema.parse({
+    model: flags.model,
+    format: flags.format,
+    schema: flags.schema,
+    files: flags.file,
+    urls: flags.url,
+    vars: flags.var,
+  })
+}
+
+const mergeOptionsWithPreset = (options, presetContent) => {
+  return optionsSchema.parse({
+    // Overwrite model, format, schema only if not provided via flags
+    model: hasModelFlag ? options.model : (presetContent.model ?? options.model),
+    format: hasFormatFlag ? options.format : (presetContent.format ?? options.format),
+    schema: hasSchemaFlag ? options.schema : (presetContent.schema ?? options.schema),
+    // Merge files
+    files: [...presetContent.files, ...options.files],
+    // Merge URLs
+    urls: [...presetContent.urls, ...options.urls],
+    // Keep vars as is
+    vars: options.vars,
+  })
+}
+
+const executePromptAction = async (prompt, flags) => {
   try {
-    // Build options from flags
-    let options = optionsSchema.parse({
-      model: flags.model,
-      format: flags.format,
-      schema: flags.schema,
-      files: flags.file,
-      urls: flags.url,
-      vars: flags.var,
-    })
-
-    // Validate that preset file is provided when using preset mode
-    if (prompt === 'preset' && !presetFile) {
-      throw new Error('Preset file path is required when using "preset" command')
-    }
-
-    // Check if using preset mode
-    if (prompt === 'preset') {
-      const preset = await loadPreset(presetFile)
-
-      // Use prompt from preset
-      prompt = preset.prompt
-
-      // Update options with preset values
-      options = optionsSchema.parse({
-        // Overwrite model, format, schema only if not provided via flags
-        model: hasModelFlag ? options.model : (preset.model ?? options.model),
-        format: hasFormatFlag ? options.format : (preset.format ?? options.format),
-        schema: hasSchemaFlag ? options.schema : (preset.schema ?? options.schema),
-        // Merge files
-        files: [...preset.files, ...options.files],
-        // Merge URLs
-        urls: [...preset.urls, ...options.urls],
-        // Keep vars as is
-        vars: options.vars,
-      })
-    }
-
     // Handle stdin input
     let stdinContent = null
     if (hasStdinData()) {
@@ -112,8 +159,11 @@ const action = async (prompt, presetFile, flags) => {
 
     // Validate that we have a prompt
     if (!prompt && !stdinContent) {
-      throw new Error('A prompt is required. Provide it as an argument or via stdin.')
+      throw new Error('A prompt is required either as an argument or via stdin')
     }
+
+    // Build options from flags
+    const options = flagsToOptions(flags)
 
     // Build the prompt and prefer the argument over stdin
     const userPrompt = replaceVariables(prompt ?? stdinContent, options.vars)
@@ -133,43 +183,62 @@ const action = async (prompt, presetFile, flags) => {
   }
 }
 
+const executePresetAction = async (preset, flags) => {
+  try {
+    // Validate that preset file is provided
+    if (!preset) {
+      throw new Error('Preset file path is required when using "preset" command')
+    }
+
+    // Load preset and use prompt from it
+    const presetContent = await loadPreset(preset)
+    const prompt = presetContent.prompt
+
+    // Build options from flags and merge with preset
+    const options = mergeOptionsWithPreset(flagsToOptions(flags), presetContent)
+
+    // Build the prompt
+    const userPrompt = replaceVariables(prompt, options.vars)
+    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls)
+
+    const result = await executePrompt(finalPrompt, {
+      model: options.model,
+      format: options.format,
+      schema: options.schema,
+    })
+
+    console.log(result)
+  } catch (error) {
+    console.error(error)
+
+    process.exit(1)
+  }
+}
+
+program.name(pkg.name).description(pkg.description).version(pkg.version).addHelpText('after', helpText)
+
 program
-  .name(pkg.name)
-  .description(pkg.description)
-  .version(pkg.version)
-  .argument('[prompt]', 'The AI prompt to execute, or "preset" to load from a preset file (optional when using stdin)')
-  .argument('[presetFile]', 'Path to preset JSON file (required when first argument is "preset")')
-  .option('-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL)
-  .option('-f, --format <format>', 'Output format: string, number, object, array', 'string')
-  .option('-s, --schema <schema>', 'Zod schema for object/array format (required when format is object or array)')
-  .option(
-    '--file <path>',
-    'Read content from file and include as context (can be used multiple times)',
-    (value, previous) => {
-      return previous ? [...previous, value] : [value]
-    },
-  )
-  .option(
-    '--url <url>',
-    'Fetch content from URL and include as context (can be used multiple times)',
-    (value, previous) => {
-      return previous ? [...previous, value] : [value]
-    },
-  )
-  .option(
-    '--var <variable=value>',
-    'Define variables for replacement in prompt using {{variable}} syntax (can be used multiple times)',
-    (value, previous) => {
-      const [variable, ...variableValueParts] = value.split('=')
-      const variableValue = variableValueParts.join('=') // Handle values with = in them
+  .command('prompt')
+  .argument('[prompt]', 'The AI prompt to execute (optional when using stdin)')
+  .option(...modelFlag)
+  .option(...formatFlag)
+  .option(...schemaFlag)
+  .option(...fileFlag)
+  .option(...urlFlag)
+  .option(...varFlag)
+  .addHelpText('after', promptHelpText)
+  .action(executePromptAction)
 
-      if (!variable) {
-        throw new Error(`Invalid --var format: '${value}'. Expected format: variable=value`)
-      }
+program
+  .command('preset')
+  .argument('[file]', 'Path to preset JSON file')
+  .option(...modelFlag)
+  .option(...formatFlag)
+  .option(...schemaFlag)
+  .option(...fileFlag)
+  .option(...urlFlag)
+  .option(...varFlag)
+  .addHelpText('after', presetHelpText)
+  .action(executePresetAction)
 
-      return { ...previous, [variable]: variableValue }
-    },
-  )
-  .addHelpText('after', helpText)
-  .action(action)
-  .parse()
+program.parse()
