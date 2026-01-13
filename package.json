@@ -30,12 +30,12 @@
     "test": "npm run lint"
   },
   "dependencies": {
-    "@openrouter/ai-sdk-provider": "^1.5.3",
-    "ai": "^5.0.113",
+    "@openrouter/ai-sdk-provider": "^1.5.4",
+    "ai": "^5.0.121",
     "commander": "^14.0.2",
-    "dotenv": "^14.3.2",
+    "dotenv": "^16.6.1",
     "sanitize-html": "^2.17.0",
-    "zod": "^4.2.0"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@electerious/eslint-config": "^5.2.1",
