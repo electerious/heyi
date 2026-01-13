@@ -15,7 +15,8 @@ npm install heyi -g
 ### CLI
 
 ```sh
-heyi [prompt] [options]
+heyi prompt [prompt] [options]
+heyi preset [file] [options]
 ```
 
 #### Options
@@ -38,55 +39,55 @@ heyi [prompt] [options]
 
 ```sh
 # Simple text prompt
-heyi "What is the capital of France?"
+heyi prompt "What is the capital of France?"
 
 # Use a different model
-heyi "Explain quantum computing" --model google/gemini-2.0-flash-exp
+heyi prompt "Explain quantum computing" --model google/gemini-2.0-flash-exp
 
 # Get structured output as array of strings
-heyi "List 5 programming languages" --format array --schema "z.string()"
+heyi prompt "List 5 programming languages" --format array --schema "z.string()"
 
 # Get structured output as array of objects
-heyi "List 3 countries with their capitals" --format array --schema "z.object({name:z.string(),capital:z.string()})"
+heyi prompt "List 3 countries with their capitals" --format array --schema "z.object({name:z.string(),capital:z.string()})"
 
 # Get structured output as single object
-heyi "Analyze: revenue 100k, costs 60k" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
+heyi prompt "Analyze: revenue 100k, costs 60k" --format object --schema "z.object({revenue:z.number(),costs:z.number()})"
 
 # Complex nested schema
-heyi "Analyze top 3 tech companies" --format array --schema "z.object({name:z.string(),founded:z.number(),products:z.array(z.string())})"
+heyi prompt "Analyze top 3 tech companies" --format array --schema "z.object({name:z.string(),founded:z.number(),products:z.array(z.string())})"
 
 # Variable replacement in prompts
-heyi "Preset in {{language}}" --var language="German"
-heyi "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+heyi prompt "Preset in {{language}}" --var language="German"
+heyi prompt "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
 
 # Variable replacement with stdin
-echo "Translate to {{lang}}" | heyi --var lang="Spanish"
+echo "Translate to {{language}}" | heyi prompt --var language="Spanish"
 
 # Set default model via environment variable
-MODEL=perplexity/sonar heyi "Explain AI"
+MODEL=perplexity/sonar heyi prompt "Explain AI"
 
 # Set API key via environment variable
-API_KEY=your-key heyi "Hello, AI!"
+API_KEY=your-key heyi prompt "Hello, AI!"
 
 # Input from file as context
-heyi "Summarize this content" --file input.txt
+heyi prompt "Summarize this content" --file input.txt
 
 # Input from multiple files as context
-heyi "Compare these files" --file file1.txt --file file2.txt
-heyi "Analyze all these documents" --file doc1.md --file doc2.md --file doc3.md
+heyi prompt "Compare these files" --file file1.txt --file file2.txt
+heyi prompt "Analyze all these documents" --file doc1.md --file doc2.md --file doc3.md
 
 # Input from URL as context
-heyi "Summarize this article" --url https://example.com/article.html
+heyi prompt "Summarize this article" --url https://example.com/article.html
 
 # Input from multiple URLs as context
-heyi "Compare these articles" --url https://example.com/article1.html --url https://example.com/article2.html
+heyi prompt "Compare these articles" --url https://example.com/article1.html --url https://example.com/article2.html
 
 # Mix files and URLs as context
-heyi "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
+heyi prompt "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
 
 # Input from stdin
-cat article.md | heyi "Extract all URLs mentioned"
-echo "Analyze this text" | heyi
+cat article.md | heyi prompt "Extract all URLs mentioned"
+echo "Analyze this text" | heyi prompt
 
 # Preset files
 heyi preset file.json
@@ -214,10 +215,10 @@ npm test
 npm run format
 
 # Run the CLI in development
-npm start -- "Your prompt here"
+npm start -- prompt "Your prompt here"
 
 # Or run directly
-./bin/index.js "Your prompt here"
+./bin/index.js prompt "Your prompt here"
 ```
 
 ## Related
