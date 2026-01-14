@@ -88,11 +88,13 @@ const fetchUrlContentWithFetch = async (url) => {
 const fetchUrlContentWithChrome = async (url) => {
   const browser = await launch({
     headless: true,
+    // These args are required for running in containerized environments (e.g., Docker, CI/CD)
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
   try {
     const page = await browser.newPage()
-    await page.goto(url, { waitUntil: 'networkidle0' })
+    // Wait for network to be idle, with a 30-second timeout to prevent indefinite waiting
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 })
     const html = await page.content()
     // Sanitize HTML to extract only text content and avoid large data
     const cleanText = sanitizeHtml(html, {
