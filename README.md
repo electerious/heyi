@@ -24,6 +24,7 @@ heyi preset [file] [options]
 - `-m, --model <model>` - AI model to use (default: `openai/gpt-4o-mini`)
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
+- `-c, --crawler <crawler>` - Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`)
 - `--file <path>` - Read content from file and include as context (can be used multiple times)
 - `--url <url>` - Fetch content from URL and include as context (can be used multiple times)
 - `--var <key=value>` - Define variables for replacement in prompt using `{{key}}` syntax (can be used multiple times)
@@ -34,6 +35,7 @@ heyi preset [file] [options]
 
 - `API_KEY` - OpenRouter API key (required, can be set via environment or `.env` file)
 - `MODEL` - Default AI model to use (optional, can be overridden with `--model` flag)
+- `CRAWLER` - Default crawler to use for fetching URLs (optional, can be overridden with `--crawler` flag)
 
 ### Examples
 
@@ -82,6 +84,10 @@ heyi prompt "Summarize this article" --url https://example.com/article.html
 # Input from multiple URLs as context
 heyi prompt "Compare these articles" --url https://example.com/article1.html --url https://example.com/article2.html
 
+# Use Chrome crawler for JavaScript-heavy pages
+heyi prompt "Summarize this SPA" --url https://example.com/spa --crawler chrome
+CRAWLER=chrome heyi prompt "Get content from dynamic page" --url https://example.com/dynamic
+
 # Mix files and URLs as context
 heyi prompt "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
 
@@ -106,6 +112,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
   "model": "openai/gpt-4o-mini",
   "format": "array",
   "schema": "z.string()",
+  "crawler": "fetch",
   "files": ["path/to/file1.txt", "path/to/file2.txt"],
   "urls": ["https://example.com/page.html"]
 }
@@ -117,6 +124,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 - **model** (optional): AI model to use (e.g., `openai/gpt-4o-mini`, `google/gemini-2.0-flash-exp`).
 - **format** (optional): Output format: `string`, `number`, `object`, `array` (default: `string`).
 - **schema** (optional): Zod schema for object/array format (required when format is `object` or `array`).
+- **crawler** (optional): Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`).
 - **files** (optional): Array of file paths to include as context.
 - **urls** (optional): Array of URLs to fetch and include as context.
 
@@ -169,6 +177,7 @@ heyi preset languages.json
 - **Model override**: Using `--model` flag overrides the model specified in the preset file.
 - **Format override**: Using `--format` flag overrides the format specified in the preset file.
 - **Schema override**: Using `--schema` flag overrides the schema specified in the preset file.
+- **Crawler override**: Using `--crawler` flag overrides the crawler specified in the preset file.
 - **Files and URLs append**: Using `--file` or `--url` flags adds additional context to the preset's files and URLs.
 - **Variables**: Use `--var` to replace variables in the preset's prompt.
 
@@ -178,6 +187,9 @@ heyi preset file.json --model openai/gpt-4o
 
 # Override format from preset
 heyi preset file.json --format object --schema "z.object({name:z.string()})"
+
+# Override crawler from preset
+heyi preset file.json --crawler chrome
 
 # Add additional files to preset's files
 heyi preset file.json --file extra.txt
@@ -201,6 +213,35 @@ The tool uses Zod schemas to ensure the AI model returns data in the requested f
 - URL array: `--format array --schema "z.url()"` (not supported by all models)
 - Object array: `--format array --schema "z.object({name:z.string(),age:z.number()})"`
 - Single object: `--format object --schema "z.object({total:z.number(),items:z.array(z.string())})"`
+
+## Crawlers
+
+The tool supports two crawlers for fetching content from URLs:
+
+- **fetch** (default): Uses the native `fetch` API to retrieve HTML content. Fast and lightweight, but may not work well with JavaScript-heavy or dynamically rendered pages.
+- **chrome**: Uses Puppeteer to launch a headless Chrome browser and retrieve content after the page has fully loaded. Ideal for single-page applications (SPAs) and JavaScript-heavy websites, but slower and requires more resources.
+
+### When to Use Chrome Crawler
+
+Use the `chrome` crawler when:
+
+- The target website relies heavily on JavaScript for rendering content
+- Content is loaded dynamically after the initial page load
+- You need to interact with a single-page application (SPA)
+- The `fetch` crawler returns incomplete or missing content
+
+### Crawler Examples
+
+```sh
+# Use default fetch crawler
+heyi prompt "Summarize this page" --url https://example.com
+
+# Use Chrome crawler for JS-heavy page
+heyi prompt "Extract data from SPA" --url https://app.example.com --crawler chrome
+
+# Set Chrome as default crawler via environment
+CRAWLER=chrome heyi prompt "Get content" --url https://dynamic-site.com
+```
 
 ## Development
 

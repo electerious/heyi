@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Crawler option (`--crawler`, `-c`) to choose between `fetch` (default) and `chrome` crawlers for fetching URL content
+- Support for `CRAWLER` environment variable to set the default crawler
+- Chrome crawler using Puppeteer to fetch content from JavaScript-heavy and dynamically rendered pages
+- Crawler option support in preset files
+
 ## [2.0.0] - 2026-01-13
 
 ### Added
