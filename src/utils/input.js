@@ -58,12 +58,33 @@ export const hasStdinData = () => {
 }
 
 /**
+ * Validate that a URL uses http or https protocol.
+ *
+ * @param {string} url - URL to validate
+ * @throws {Error} If URL is invalid or uses a dangerous protocol
+ */
+const validateUrl = (url) => {
+  try {
+    const parsedUrl = new URL(url)
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new Error(`Invalid protocol '${parsedUrl.protocol}'. Only http and https are supported.`)
+    }
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(`Invalid URL format: ${url}`)
+    }
+    throw error
+  }
+}
+
+/**
  * Fetch content from a URL using fetch API.
  *
  * @param {string} url - URL to fetch content from
  * @returns {Promise<string>} The URL content
  */
 const fetchUrlContentWithFetch = async (url) => {
+  validateUrl(url)
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -86,6 +107,7 @@ const fetchUrlContentWithFetch = async (url) => {
  * @returns {Promise<string>} The URL content
  */
 const fetchUrlContentWithChrome = async (url) => {
+  validateUrl(url)
   const browser = await launch({
     headless: true,
     // These args are required for running in containerized environments (e.g., Docker, CI/CD)
@@ -94,6 +116,7 @@ const fetchUrlContentWithChrome = async (url) => {
   try {
     const page = await browser.newPage()
     // Wait for network to be idle, with a 30-second timeout to prevent indefinite waiting
+    // networkidle0 is specifically used for JavaScript-heavy pages to ensure all dynamic content is loaded
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 })
     const html = await page.content()
     // Sanitize HTML to extract only text content and avoid large data
