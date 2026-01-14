@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { createInterface } from 'node:readline'
+import { launch } from 'puppeteer'
 import sanitizeHtml from 'sanitize-html'
 
 /**
@@ -57,18 +58,42 @@ export const hasStdinData = () => {
 }
 
 /**
- * Fetch content from a URL.
+ * Fetch content from a URL using fetch API.
  *
  * @param {string} url - URL to fetch content from
  * @returns {Promise<string>} The URL content
  */
-export const fetchUrlContent = async (url) => {
+const fetchUrlContentWithFetch = async (url) => {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+  const html = await response.text()
+  // Sanitize HTML to extract only text content and avoid large data
+  const cleanText = sanitizeHtml(html, {
+    allowedTags: [],
+    allowedAttributes: {},
+    allowedSchemes: [],
+    allowedSchemesAppliedToAttributes: [],
+  })
+  return cleanText.trim()
+}
+
+/**
+ * Fetch content from a URL using Chrome/Puppeteer.
+ *
+ * @param {string} url - URL to fetch content from
+ * @returns {Promise<string>} The URL content
+ */
+const fetchUrlContentWithChrome = async (url) => {
+  const browser = await launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  })
   try {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-    const html = await response.text()
+    const page = await browser.newPage()
+    await page.goto(url, { waitUntil: 'networkidle0' })
+    const html = await page.content()
     // Sanitize HTML to extract only text content and avoid large data
     const cleanText = sanitizeHtml(html, {
       allowedTags: [],
@@ -77,6 +102,21 @@ export const fetchUrlContent = async (url) => {
       allowedSchemesAppliedToAttributes: [],
     })
     return cleanText.trim()
+  } finally {
+    await browser.close()
+  }
+}
+
+/**
+ * Fetch content from a URL.
+ *
+ * @param {string} url - URL to fetch content from
+ * @param {string} crawler - Crawler to use: 'fetch' or 'chrome' (default: 'fetch')
+ * @returns {Promise<string>} The URL content
+ */
+export const fetchUrlContent = async (url, crawler = 'fetch') => {
+  try {
+    return crawler === 'chrome' ? await fetchUrlContentWithChrome(url) : await fetchUrlContentWithFetch(url)
   } catch (error) {
     throw new Error(`Failed to fetch URL '${url}'`, { cause: error })
   }
