@@ -11,12 +11,18 @@ import { buildPrompt } from '../src/utils/prompt.js'
 import { replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
+const DEFAULT_CRAWLER = 'fetch'
 
 const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL]
 const formatFlag = ['-f, --format <format>', 'Output format: string, number, object, array', 'string']
 const schemaFlag = [
   '-s, --schema <schema>',
   'Zod schema for object/array format (required when format is object or array)',
+]
+const crawlerFlag = [
+  '-c, --crawler <crawler>',
+  'Crawler to use for fetching URLs: fetch, chrome',
+  process.env.CRAWLER ?? DEFAULT_CRAWLER,
 ]
 const fileFlag = [
   '--file <path>',
@@ -50,6 +56,7 @@ const varFlag = [
 const hasModelFlag = hasFlag(['--model', '-m'])
 const hasFormatFlag = hasFlag(['--format', '-f'])
 const hasSchemaFlag = hasFlag(['--schema', '-s'])
+const hasCrawlerFlag = hasFlag(['--crawler', '-c'])
 
 const program = new Command()
 
@@ -114,6 +121,7 @@ const optionsSchema = z
     model: z.string(),
     format: z.enum(['string', 'number', 'object', 'array']),
     schema: z.string().optional(),
+    crawler: z.enum(['fetch', 'chrome']),
     files: z.array(z.string()).default([]),
     urls: z.array(z.string()).default([]),
     vars: z.record(z.string(), z.string()).default({}),
@@ -128,6 +136,7 @@ const flagsToOptions = (flags) => {
     model: flags.model,
     format: flags.format,
     schema: flags.schema,
+    crawler: flags.crawler,
     files: flags.file,
     urls: flags.url,
     vars: flags.var,
@@ -136,10 +145,11 @@ const flagsToOptions = (flags) => {
 
 const mergeOptionsWithPreset = (options, presetContent) => {
   return optionsSchema.parse({
-    // Overwrite model, format, schema only if not provided via flags
+    // Overwrite model, format, schema, crawler only if not provided via flags
     model: hasModelFlag ? options.model : (presetContent.model ?? options.model),
     format: hasFormatFlag ? options.format : (presetContent.format ?? options.format),
     schema: hasSchemaFlag ? options.schema : (presetContent.schema ?? options.schema),
+    crawler: hasCrawlerFlag ? options.crawler : (presetContent.crawler ?? options.crawler),
     // Merge files
     files: [...presetContent.files, ...options.files],
     // Merge URLs
@@ -167,7 +177,7 @@ const executePromptAction = async (prompt, flags) => {
 
     // Build the prompt and prefer the argument over stdin
     const userPrompt = replaceVariables(prompt ?? stdinContent, options.vars)
-    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls)
+    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls, options.crawler)
 
     const result = await executePrompt(finalPrompt, {
       model: options.model,
@@ -199,7 +209,7 @@ const executePresetAction = async (preset, flags) => {
 
     // Build the prompt
     const userPrompt = replaceVariables(prompt, options.vars)
-    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls)
+    const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls, options.crawler)
 
     const result = await executePrompt(finalPrompt, {
       model: options.model,
@@ -223,6 +233,7 @@ program
   .option(...modelFlag)
   .option(...formatFlag)
   .option(...schemaFlag)
+  .option(...crawlerFlag)
   .option(...fileFlag)
   .option(...urlFlag)
   .option(...varFlag)
@@ -235,6 +246,7 @@ program
   .option(...modelFlag)
   .option(...formatFlag)
   .option(...schemaFlag)
+  .option(...crawlerFlag)
   .option(...fileFlag)
   .option(...urlFlag)
   .option(...varFlag)

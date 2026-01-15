@@ -6,9 +6,10 @@ import { fetchUrlContent, readFileContent } from './input.js'
  * @param {string} prompt - The prompt
  * @param {string[]} filePaths - Array of file paths to include as context
  * @param {string[]} urls - Array of URLs to include as context
+ * @param {string} crawler - Crawler to use for fetching URLs: 'fetch' or 'chrome' (default: 'fetch')
  * @returns {Promise<string>} The final prompt with all contexts combined
  */
-export const buildPrompt = async (prompt, filePaths = [], urls = []) => {
+export const buildPrompt = async (prompt, filePaths = [], urls = [], crawler = 'fetch') => {
   // Handle file content as context
   const fileContents = []
   for (const filePath of filePaths) {
@@ -19,7 +20,7 @@ export const buildPrompt = async (prompt, filePaths = [], urls = []) => {
   // Handle URL content as context
   const urlContents = []
   for (const url of urls) {
-    const content = await fetchUrlContent(url)
+    const content = await fetchUrlContent(url, crawler)
     urlContents.push({ path: url, content })
   }
 

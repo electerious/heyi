@@ -6,6 +6,7 @@ const presetSchema = z.object({
   model: z.string().optional(),
   format: z.enum(['string', 'number', 'object', 'array']).optional(),
   schema: z.string().optional(),
+  crawler: z.enum(['fetch', 'chrome']).optional(),
   files: z.array(z.string()).default([]),
   urls: z.array(z.string()).default([]),
 })
