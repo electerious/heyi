@@ -33,9 +33,9 @@ heyi preset [file] [options]
 
 #### Environment Variables
 
-- `API_KEY` - OpenRouter API key (required, can be set via environment or `.env` file)
-- `MODEL` - Default AI model to use (optional, can be overridden with `--model` flag)
-- `CRAWLER` - Default crawler to use for fetching URLs (optional, can be overridden with `--crawler` flag)
+- `HEYI_API_KEY` - OpenRouter API key (required, can be set via environment or `.env` file)
+- `HEYI_MODEL` - Default AI model to use (optional, can be overridden with `--model` flag)
+- `HEYI_CRAWLER` - Default crawler to use for fetching URLs (optional, can be overridden with `--crawler` flag)
 
 ### Examples
 
@@ -66,10 +66,10 @@ heyi prompt "Preset in {{input}} and output in {{output}}" --var input="German" 
 echo "Translate to {{language}}" | heyi prompt --var language="Spanish"
 
 # Set default model via environment variable
-MODEL=perplexity/sonar heyi prompt "Explain AI"
+HEYI_MODEL=perplexity/sonar heyi prompt "Explain AI"
 
 # Set API key via environment variable
-API_KEY=your-key heyi prompt "Hello, AI!"
+HEYI_API_KEY=your-key heyi prompt "Hello, AI!"
 
 # Input from file as context
 heyi prompt "Summarize this content" --file input.txt
@@ -86,7 +86,7 @@ heyi prompt "Compare these articles" --url https://example.com/article1.html --u
 
 # Use Chrome crawler for JavaScript-heavy pages
 heyi prompt "Summarize this SPA" --url https://example.com/spa --crawler chrome
-CRAWLER=chrome heyi prompt "Get content from dynamic page" --url https://example.com/dynamic
+HEYI_CRAWLER=chrome heyi prompt "Get content from dynamic page" --url https://example.com/dynamic
 
 # Mix files and URLs as context
 heyi prompt "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
@@ -240,7 +240,7 @@ heyi prompt "Summarize this page" --url https://example.com
 heyi prompt "Extract data from SPA" --url https://app.example.com --crawler chrome
 
 # Set Chrome as default crawler via environment
-CRAWLER=chrome heyi prompt "Get content" --url https://dynamic-site.com
+HEYI_CRAWLER=chrome heyi prompt "Get content" --url https://dynamic-site.com
 ```
 
 ## Development

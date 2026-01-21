@@ -13,7 +13,7 @@ import { replaceVariables } from '../src/utils/variables.js'
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 const DEFAULT_CRAWLER = 'fetch'
 
-const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.MODEL ?? DEFAULT_MODEL]
+const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.HEYI_MODEL ?? DEFAULT_MODEL]
 const formatFlag = ['-f, --format <format>', 'Output format: string, number, object, array', 'string']
 const schemaFlag = [
   '-s, --schema <schema>',
@@ -22,7 +22,7 @@ const schemaFlag = [
 const crawlerFlag = [
   '-c, --crawler <crawler>',
   'Crawler to use for fetching URLs: fetch, chrome',
-  process.env.CRAWLER ?? DEFAULT_CRAWLER,
+  process.env.HEYI_CRAWLER ?? DEFAULT_CRAWLER,
 ]
 const fileFlag = [
   '--file <path>',
@@ -87,8 +87,8 @@ Examples:
   $ heyi prompt "Preset in {{language}}" --var language="German"
 
   # Environment variables
-  $ MODEL=perplexity/sonar heyi prompt "Explain AI"
-  $ API_KEY=your-key heyi prompt "Hello, AI!"
+  $ HEYI_MODEL=perplexity/sonar heyi prompt "Explain AI"
+  $ HEYI_API_KEY=your-key heyi prompt "Hello, AI!"
 
   # Attach context
   $ heyi prompt "Summarize this content" --file input.txt
