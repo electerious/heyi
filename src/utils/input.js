@@ -120,12 +120,8 @@ const fetchUrlContentWithChrome = async (url) => {
 
     // Wait for network to be idle, with a 10-second timeout to prevent indefinite waiting.
     // If timeout occurs, continue with whatever content is available.
-    // Wait for navigation first in case there are redirects.
     try {
-      await Promise.all([
-        page.waitForNavigation({ timeout: 10000 }),
-        page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 }),
-      ])
+      await page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 })
     } catch (error) {
       // If it's a timeout error, continue with the content that's already loaded
       // For other errors (e.g., network errors), rethrow
