@@ -108,17 +108,34 @@ const fetchUrlContentWithFetch = async (url) => {
  */
 const fetchUrlContentWithChrome = async (url) => {
   validateUrl(url)
+
   const browser = await launch({
     headless: true,
     // These args are required for running in containerized environments (e.g., Docker, CI/CD)
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
+
   try {
     const page = await browser.newPage()
-    // Wait for network to be idle, with a 30-second timeout to prevent indefinite waiting
-    // networkidle0 is specifically used for JavaScript-heavy pages to ensure all dynamic content is loaded
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 })
+
+    // Wait for network to be idle, with a 10-second timeout to prevent indefinite waiting.
+    // If timeout occurs, continue with whatever content is available.
+    // Wait for navigation first in case there are redirects.
+    try {
+      await Promise.all([
+        page.waitForNavigation({ timeout: 10000 }),
+        page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 }),
+      ])
+    } catch (error) {
+      // If it's a timeout error, continue with the content that's already loaded
+      // For other errors (e.g., network errors), rethrow
+      if (!error.message.includes('timeout') && !error.message.includes('Navigation timeout')) {
+        throw error
+      }
+    }
+
     const html = await page.content()
+
     // Sanitize HTML to extract only text content and avoid large data
     const cleanText = sanitizeHtml(html, {
       allowedTags: [],

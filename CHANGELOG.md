@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-01-23
+
+### Changed
+
+- Environment variables are now prefixed with `HEYI_`
+- Chrome crawler timeout reduced from 30 seconds to 10 seconds for faster responses
+- Chrome crawler now gracefully handles timeouts by continuing with loaded content instead of failing
+
 ## [2.1.0] - 2026-01-15
 
 ### Added
