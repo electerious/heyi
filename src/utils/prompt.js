@@ -6,7 +6,7 @@ import { fetchUrlContent, readFileContent } from './input.js'
  * @param {string} prompt - The prompt
  * @param {string[]} filePaths - Array of file paths to include as context
  * @param {string[]} urls - Array of URLs to include as context
- * @param {string} crawler - Crawler to use for fetching URLs: 'fetch' or 'chrome' (default: 'fetch')
+ * @param {string} crawler - Crawler to use for fetching URLs: 'fetch', 'chrome', or path to browser executable (default: 'fetch')
  * @returns {Promise<string>} The final prompt with all contexts combined
  */
 export const buildPrompt = async (prompt, filePaths = [], urls = [], crawler = 'fetch') => {

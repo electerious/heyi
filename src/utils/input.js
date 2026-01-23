@@ -4,6 +4,17 @@ import { launch } from 'puppeteer'
 import sanitizeHtml from 'sanitize-html'
 
 /**
+ * Check if the crawler value is a path to a browser executable.
+ * Paths must start with '/' (absolute) or './' or '../' (relative).
+ *
+ * @param {string} crawler - Crawler value to check
+ * @returns {boolean} True if the value appears to be a file path
+ */
+const isBrowserPath = (crawler) => {
+  return crawler.startsWith('/') || crawler.startsWith('./') || crawler.startsWith('../')
+}
+
+/**
  * Read content from a file.
  *
  * @param {string} filePath - Path to the file to read
@@ -104,15 +115,23 @@ const fetchUrlContentWithFetch = async (url) => {
  * Fetch content from a URL using Chrome/Puppeteer.
  *
  * @param {string} url - URL to fetch content from
+ * @param {string} crawler - Crawler value: 'chrome' or path to browser executable
  * @returns {Promise<string>} The URL content
  */
-const fetchUrlContentWithChrome = async (url) => {
+const fetchUrlContentWithChrome = async (url, crawler = 'chrome') => {
   validateUrl(url)
-  const browser = await launch({
+  const launchOptions = {
     headless: true,
     // These args are required for running in containerized environments (e.g., Docker, CI/CD)
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  })
+  }
+
+  // If crawler is a path to a browser executable, use it as executablePath
+  if (isBrowserPath(crawler)) {
+    launchOptions.executablePath = crawler
+  }
+
+  const browser = await launch(launchOptions)
   try {
     const page = await browser.newPage()
     // Wait for network to be idle, with a 30-second timeout to prevent indefinite waiting
@@ -136,12 +155,14 @@ const fetchUrlContentWithChrome = async (url) => {
  * Fetch content from a URL.
  *
  * @param {string} url - URL to fetch content from
- * @param {string} crawler - Crawler to use: 'fetch' or 'chrome' (default: 'fetch')
+ * @param {string} crawler - Crawler to use: 'fetch', 'chrome', or path to browser executable (default: 'fetch')
  * @returns {Promise<string>} The URL content
  */
 export const fetchUrlContent = async (url, crawler = 'fetch') => {
   try {
-    return crawler === 'chrome' ? await fetchUrlContentWithChrome(url) : await fetchUrlContentWithFetch(url)
+    // Use Chrome crawler if 'chrome' is specified or if it's a path to a browser executable
+    const shouldUseChrome = crawler === 'chrome' || isBrowserPath(crawler)
+    return shouldUseChrome ? await fetchUrlContentWithChrome(url, crawler) : await fetchUrlContentWithFetch(url)
   } catch (error) {
     throw new Error(`Failed to fetch URL '${url}'`, { cause: error })
   }

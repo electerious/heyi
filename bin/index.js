@@ -21,7 +21,7 @@ const schemaFlag = [
 ]
 const crawlerFlag = [
   '-c, --crawler <crawler>',
-  'Crawler to use for fetching URLs: fetch, chrome',
+  'Crawler to use for fetching URLs: fetch, chrome, or path to chrome executable',
   process.env.HEYI_CRAWLER ?? DEFAULT_CRAWLER,
 ]
 const fileFlag = [
@@ -121,7 +121,7 @@ const optionsSchema = z
     model: z.string(),
     format: z.enum(['string', 'number', 'object', 'array']),
     schema: z.string().optional(),
-    crawler: z.enum(['fetch', 'chrome']),
+    crawler: z.string(),
     files: z.array(z.string()).default([]),
     urls: z.array(z.string()).default([]),
     vars: z.record(z.string(), z.string()).default({}),

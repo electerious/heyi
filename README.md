@@ -24,7 +24,7 @@ heyi preset [file] [options]
 - `-m, --model <model>` - AI model to use (default: `openai/gpt-4o-mini`)
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
-- `-c, --crawler <crawler>` - Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`)
+- `-c, --crawler <crawler>` - Crawler to use for fetching URLs: `fetch`, `chrome`, or path to browser executable (default: `fetch`)
 - `--file <path>` - Read content from file and include as context (can be used multiple times)
 - `--url <url>` - Fetch content from URL and include as context (can be used multiple times)
 - `--var <key=value>` - Define variables for replacement in prompt using `{{key}}` syntax (can be used multiple times)
@@ -35,7 +35,7 @@ heyi preset [file] [options]
 
 - `HEYI_API_KEY` - OpenRouter API key (required, can be set via environment or `.env` file)
 - `HEYI_MODEL` - Default AI model to use (optional, can be overridden with `--model` flag)
-- `HEYI_CRAWLER` - Default crawler to use for fetching URLs (optional, can be overridden with `--crawler` flag)
+- `HEYI_CRAWLER` - Default crawler to use for fetching URLs: `fetch`, `chrome`, or path to browser executable (optional, can be overridden with `--crawler` flag)
 
 ### Examples
 
@@ -88,6 +88,10 @@ heyi prompt "Compare these articles" --url https://example.com/article1.html --u
 heyi prompt "Summarize this SPA" --url https://example.com/spa --crawler chrome
 HEYI_CRAWLER=chrome heyi prompt "Get content from dynamic page" --url https://example.com/dynamic
 
+# Use custom browser executable
+heyi prompt "Fetch page with custom Chrome" --url https://example.com --crawler /usr/bin/chromium
+HEYI_CRAWLER=/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome heyi prompt "Get content" --url https://example.com
+
 # Mix files and URLs as context
 heyi prompt "Compare local and remote content" --file local.txt --url https://example.com/remote.txt
 
@@ -124,7 +128,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 - **model** (optional): AI model to use (e.g., `openai/gpt-4o-mini`, `google/gemini-2.0-flash-exp`).
 - **format** (optional): Output format: `string`, `number`, `object`, `array` (default: `string`).
 - **schema** (optional): Zod schema for object/array format (required when format is `object` or `array`).
-- **crawler** (optional): Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`).
+- **crawler** (optional): Crawler to use for fetching URLs: `fetch`, `chrome`, or path to browser executable (default: `fetch`).
 - **files** (optional): Array of file paths to include as context.
 - **urls** (optional): Array of URLs to fetch and include as context.
 
@@ -216,19 +220,21 @@ The tool uses Zod schemas to ensure the AI model returns data in the requested f
 
 ## Crawlers
 
-The tool supports two crawlers for fetching content from URLs:
+The tool supports different crawlers for fetching content from URLs:
 
 - **fetch** (default): Uses the native `fetch` API to retrieve HTML content. Fast and lightweight, but may not work well with JavaScript-heavy or dynamically rendered pages.
 - **chrome**: Uses Puppeteer to launch a headless Chrome browser and retrieve content after the page has fully loaded. Ideal for single-page applications (SPAs) and JavaScript-heavy websites, but slower and requires more resources.
+- **custom path**: You can specify a path to a custom browser executable (e.g., `/usr/bin/chromium`, `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`). The path must start with `/` (absolute path), `./` or `../` (relative path). This allows you to use a specific browser installation already on your system.
 
 ### When to Use Chrome Crawler
 
-Use the `chrome` crawler when:
+Use the `chrome` crawler or custom browser path when:
 
 - The target website relies heavily on JavaScript for rendering content
 - Content is loaded dynamically after the initial page load
 - You need to interact with a single-page application (SPA)
 - The `fetch` crawler returns incomplete or missing content
+- You want to use a specific browser version or installation on your system
 
 ### Crawler Examples
 
@@ -241,6 +247,15 @@ heyi prompt "Extract data from SPA" --url https://app.example.com --crawler chro
 
 # Set Chrome as default crawler via environment
 HEYI_CRAWLER=chrome heyi prompt "Get content" --url https://dynamic-site.com
+
+# Use custom browser executable (Linux)
+heyi prompt "Fetch with Chromium" --url https://example.com --crawler /usr/bin/chromium
+
+# Use custom browser executable (macOS)
+heyi prompt "Fetch with Chrome" --url https://example.com --crawler /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome
+
+# Set custom browser as default via environment
+HEYI_CRAWLER=/usr/bin/chromium-browser heyi prompt "Get content" --url https://example.com
 ```
 
 ## Development
