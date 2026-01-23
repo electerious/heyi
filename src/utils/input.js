@@ -11,6 +11,10 @@ import sanitizeHtml from 'sanitize-html'
  * @returns {boolean} True if the value appears to be a file path
  */
 const isBrowserPath = (crawler) => {
+  // Ensure crawler is a non-empty string
+  if (!crawler || typeof crawler !== 'string') {
+    return false
+  }
   return crawler.startsWith('/') || crawler.startsWith('./') || crawler.startsWith('../')
 }
 
@@ -127,6 +131,8 @@ const fetchUrlContentWithChrome = async (url, crawler = 'chrome') => {
   }
 
   // If crawler is a path to a browser executable, use it as executablePath
+  // Note: Puppeteer will validate the executable when launch() is called.
+  // If the path doesn't exist or isn't a valid browser, launch() will throw an error.
   if (isBrowserPath(crawler)) {
     launchOptions.executablePath = crawler
   }
