@@ -19,9 +19,9 @@ config()
 export const executePrompt = async (prompt, options = {}) => {
   const { model, format = 'string', schema } = options
 
-  const apiKey = process.env.API_KEY
+  const apiKey = process.env.HEYI_API_KEY
   if (!apiKey) {
-    throw new Error('API_KEY environment variable is required. Set it via environment or .env file.')
+    throw new Error('HEYI_API_KEY environment variable is required. Set it via environment or .env file.')
   }
 
   const openrouter = createOpenRouter({
