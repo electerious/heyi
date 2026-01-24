@@ -109,32 +109,43 @@ const fetchUrlContentWithFetch = async (url) => {
 const fetchUrlContentWithChrome = async (url) => {
   validateUrl(url)
 
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const navigateTo = async (page, url) => {
+    try {
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 8000 })
+    } catch (error) {
+      // If it's a timeout error, continue with the content that's already loaded instead of failing
+      if (error.message.includes('Navigation timeout')) {
+        return
+      }
+
+      throw error
+    }
+  }
+
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const getContent = async (page) => {
+    try {
+      return await page.content()
+    } catch (error) {
+      // A client-side navigation might have happened, try to recover by waiting for navigation
+      if (error.message.includes('Execution context was destroyed, most likely because of a navigation.')) {
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 8000 })
+        return page.content()
+      }
+      throw error
+    }
+  }
+
   const browser = await launch({
-    headless: true,
     // These args are required for running in containerized environments (e.g., Docker, CI/CD)
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
 
   try {
     const page = await browser.newPage()
-
-    // Wait for network to be idle, with a 10-second timeout to prevent indefinite waiting.
-    // If timeout occurs, continue with whatever content is available.
-    // Wait for navigation in case there are client-side redirects.
-    try {
-      await Promise.all([
-        page.goto(url, { waitUntil: 'networkidle0', timeout: 10000 }),
-        page.waitForNavigation({ timeout: 10000 }),
-      ])
-    } catch (error) {
-      // If it's a timeout error, continue with the content that's already loaded
-      // For other errors (e.g., network errors), rethrow
-      if (!error.message.includes('timeout') && !error.message.includes('Navigation timeout')) {
-        throw error
-      }
-    }
-
-    const html = await page.content()
+    await navigateTo(page, url)
+    const html = await getContent(page)
 
     // Sanitize HTML to extract only text content and avoid large data
     const cleanText = sanitizeHtml(html, {
