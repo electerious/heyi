@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Interactive prompting for undefined variables - the CLI now prompts users to enter values for variables that aren't provided via `--var` flag
+- Support for variable descriptions using `{{variable description="Description"}}` syntax - descriptions are displayed when prompting users for input
+
 ### Changed
 
 - Chrome crawler now uses more robust error handling for page navigation and content retrieval

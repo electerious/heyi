@@ -8,7 +8,7 @@ import { hasFlag } from '../src/utils/argv.js'
 import { hasStdinData, readStdin } from '../src/utils/input.js'
 import { loadPreset } from '../src/utils/preset.js'
 import { buildPrompt } from '../src/utils/prompt.js'
-import { replaceVariables } from '../src/utils/variables.js'
+import { findUndefinedVariables, promptForVariable, replaceVariables } from '../src/utils/variables.js'
 
 const DEFAULT_MODEL = 'openai/gpt-4o-mini'
 const DEFAULT_CRAWLER = 'fetch'
@@ -86,6 +86,12 @@ Examples:
   # Variable replacement
   $ heyi prompt "Preset in {{language}}" --var language="German"
 
+  # Interactive variable prompting (will prompt for undefined variables)
+  $ heyi prompt "Translate {{text}} to {{language}}"
+
+  # Variable with description (shows during prompt)
+  $ heyi prompt "Explain {{topic description='What to explain'}} in simple terms"
+
   # Environment variables
   $ HEYI_MODEL=perplexity/sonar heyi prompt "Explain AI"
   $ HEYI_API_KEY=your-key heyi prompt "Hello, AI!"
@@ -110,6 +116,10 @@ Examples:
 
   # Variable replacement
   $ heyi preset file.json --var language=german
+
+  # Interactive variable prompting (will prompt for undefined variables)
+  $ heyi preset file.json
+  # (prompts for any variables in preset not provided via --var)
 
   # Attach additional context
   $ heyi preset file.json --file additional.txt
@@ -175,8 +185,20 @@ const executePromptAction = async (prompt, flags) => {
     // Build options from flags
     const options = flagsToOptions(flags)
 
-    // Build the prompt and prefer the argument over stdin
-    const userPrompt = replaceVariables(prompt ?? stdinContent, options.vars)
+    // Get the user prompt (prefer argument over stdin)
+    const rawPrompt = prompt ?? stdinContent
+
+    // Find undefined variables in the prompt
+    const undefinedVars = findUndefinedVariables(rawPrompt, options.vars)
+
+    // Prompt user for each undefined variable
+    for (const varInfo of undefinedVars) {
+      const value = await promptForVariable(varInfo.name, varInfo.description)
+      options.vars[varInfo.name] = value
+    }
+
+    // Build the prompt with all variables replaced
+    const userPrompt = replaceVariables(rawPrompt, options.vars)
     const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls, options.crawler)
 
     const result = await executePrompt(finalPrompt, {
@@ -207,7 +229,16 @@ const executePresetAction = async (preset, flags) => {
     // Build options from flags and merge with preset
     const options = mergeOptionsWithPreset(flagsToOptions(flags), presetContent)
 
-    // Build the prompt
+    // Find undefined variables in the prompt
+    const undefinedVars = findUndefinedVariables(prompt, options.vars)
+
+    // Prompt user for each undefined variable
+    for (const varInfo of undefinedVars) {
+      const value = await promptForVariable(varInfo.name, varInfo.description)
+      options.vars[varInfo.name] = value
+    }
+
+    // Build the prompt with all variables replaced
     const userPrompt = replaceVariables(prompt, options.vars)
     const finalPrompt = await buildPrompt(userPrompt, options.files, options.urls, options.crawler)
 

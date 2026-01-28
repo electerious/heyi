@@ -62,6 +62,15 @@ heyi prompt "Analyze top 3 tech companies" --format array --schema "z.object({na
 heyi prompt "Preset in {{language}}" --var language="German"
 heyi prompt "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
 
+# Interactive variable prompting (prompts for undefined variables)
+heyi prompt "Translate {{text}} to {{language}}"
+# Will interactively prompt: text: [user enters value]
+#                            language: [user enters value]
+
+# Variable with description (shows custom prompt text)
+heyi prompt "Explain {{topic description='What to explain'}} in simple terms"
+# Will interactively prompt: What to explain (topic): [user enters value]
+
 # Variable replacement with stdin
 echo "Translate to {{language}}" | heyi prompt --var language="Spanish"
 
@@ -213,6 +222,56 @@ The tool uses Zod schemas to ensure the AI model returns data in the requested f
 - URL array: `--format array --schema "z.url()"` (not supported by all models)
 - Object array: `--format array --schema "z.object({name:z.string(),age:z.number()})"`
 - Single object: `--format object --schema "z.object({total:z.number(),items:z.array(z.string())})"`
+
+## Variables
+
+The tool supports variable replacement in prompts using `{{variable}}` syntax. Variables can be provided via the `--var` flag or through interactive prompting.
+
+### Variable Syntax
+
+**Basic variable:**
+
+```
+{{variableName}}
+```
+
+**Variable with description (for interactive prompting):**
+
+```
+{{variableName description="Description shown to user"}}
+```
+
+### Variable Behavior
+
+1. **Provided via --var flag**: Variables are directly replaced with the provided values
+2. **Not provided**: The tool will interactively prompt the user to enter the value
+3. **With description**: When prompting, the description is shown to help the user understand what to enter
+
+### Variable Examples
+
+```sh
+# Provide variables via flag
+heyi prompt "Translate {{text}} to {{language}}" --var text="Hello" --var language="Spanish"
+
+# Interactive prompting for undefined variables
+heyi prompt "Translate {{text}} to {{language}}"
+# Prompts:
+#   text: [user enters value]
+#   language: [user enters value]
+
+# Mix provided and interactive variables
+heyi prompt "Translate {{text}} to {{language}}" --var language="French"
+# Only prompts for 'text' since 'language' is provided
+
+# Use descriptions for better user experience
+heyi prompt "Explain {{topic description='Enter a topic to explain'}} in simple terms"
+# Prompts:
+#   Enter a topic to explain (topic): [user enters value]
+
+# Variables work in preset files too
+heyi preset translate.json
+# Prompts for any undefined variables in the preset's prompt
+```
 
 ## Crawlers
 
