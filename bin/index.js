@@ -85,12 +85,12 @@ Examples:
 
   # Variable replacement
   $ heyi prompt "Preset in {{language}}" --var language="German"
-  
+
   # Interactive variable prompting (will prompt for undefined variables)
   $ heyi prompt "Translate {{text}} to {{language}}"
-  
+
   # Variable with description (shows during prompt)
-  $ heyi prompt "Explain {{topic name='What to explain'}} in simple terms"
+  $ heyi prompt "Explain {{topic description='What to explain'}} in simple terms"
 
   # Environment variables
   $ HEYI_MODEL=perplexity/sonar heyi prompt "Explain AI"
@@ -116,7 +116,7 @@ Examples:
 
   # Variable replacement
   $ heyi preset file.json --var language=german
-  
+
   # Interactive variable prompting (will prompt for undefined variables)
   $ heyi preset file.json
   # (prompts for any variables in preset not provided via --var)

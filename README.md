@@ -68,7 +68,7 @@ heyi prompt "Translate {{text}} to {{language}}"
 #                            language: [user enters value]
 
 # Variable with description (shows custom prompt text)
-heyi prompt "Explain {{topic name='What to explain'}} in simple terms"
+heyi prompt "Explain {{topic description='What to explain'}} in simple terms"
 # Will interactively prompt: What to explain (topic): [user enters value]
 
 # Variable replacement with stdin
@@ -238,7 +238,7 @@ The tool supports variable replacement in prompts using `{{variable}}` syntax. V
 **Variable with description (for interactive prompting):**
 
 ```
-{{variableName name="Description shown to user"}}
+{{variableName description="Description shown to user"}}
 ```
 
 ### Variable Behavior
@@ -264,7 +264,7 @@ heyi prompt "Translate {{text}} to {{language}}" --var language="French"
 # Only prompts for 'text' since 'language' is provided
 
 # Use descriptions for better user experience
-heyi prompt "Explain {{topic name='Enter a topic to explain'}} in simple terms"
+heyi prompt "Explain {{topic description='Enter a topic to explain'}} in simple terms"
 # Prompts:
 #   Enter a topic to explain (topic): [user enters value]
 

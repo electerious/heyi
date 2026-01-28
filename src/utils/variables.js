@@ -2,14 +2,14 @@ import readline from 'node:readline'
 
 /**
  * Extract all variables from a prompt string, including their metadata.
- * Supports both {{variable}} and {{variable name="Description"}} syntax.
+ * Supports both {{variable}} and {{variable description="Description"}} syntax.
  *
  * @param {string} prompt - The prompt with variables
  * @returns {Array<{name: string, description: string|null}>} Array of variable metadata
  */
 export const extractVariables = (prompt) => {
-  // Match {{variable}} or {{variable name="description"}}
-  const pattern = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:name\s*=\s*"([^"]*)")?\s*\}\}/g
+  // Match {{variable}} or {{variable description="..."}} or {{variable description='...'}}
+  const pattern = /\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*(?:description\s*=\s*['"]([^'"]*)['"])?\s*\}\}/g
   const variables = []
   const seen = new Set()
 
@@ -68,7 +68,7 @@ export const promptForVariable = (variableName, description = null) => {
 
 /**
  * Replace variables in a prompt string.
- * Handles both {{variable}} and {{variable name="Description"}} syntax.
+ * Handles both {{variable}} and {{variable description="Description"}} syntax.
  *
  * @param {string} prompt - The prompt with variables
  * @param {object} variables - Object with variable names as keys and replacement values as values
@@ -78,8 +78,8 @@ export const replaceVariables = (prompt, variables = {}) => {
   let result = prompt
 
   for (const [variable, value] of Object.entries(variables)) {
-    // Match both {{variable}} and {{variable name="..."}}
-    const pattern = new RegExp(`\\{\\{\\s*${variable}\\s*(?:name\\s*=\\s*"[^"]*")?\\s*\\}\\}`, 'g')
+    // Match both {{variable}} and {{variable description="..."}} or {{variable description='...'}}
+    const pattern = new RegExp(`\\{\\{\\s*${variable}\\s*(?:description\\s*=\\s*['"][^'"]*['"])?\\s*\\}\\}`, 'g')
     result = result.replace(pattern, value)
   }
 
