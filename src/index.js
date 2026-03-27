@@ -1,10 +1,10 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
-import { generateObject } from 'ai'
+import { Output, generateText } from 'ai'
 import { config } from 'dotenv'
 import { getFormatSchema } from './utils/schema.js'
 
 // Load environment variables from .env file
-config()
+config({ quiet: true })
 
 /**
  * Execute an AI prompt with the specified model and format.
@@ -29,20 +29,22 @@ export const executePrompt = async (prompt, options = {}) => {
   })
 
   const zodSchema = getFormatSchema(format, schema)
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openrouter(model),
     prompt,
-    schema: zodSchema,
+    output: Output.object({
+      schema: zodSchema,
+    }),
   })
 
   switch (format) {
     case 'string':
     case 'number': {
-      return object.result
+      return output.result
     }
     case 'object':
     case 'array': {
-      return JSON.stringify(object.result, null, 2)
+      return JSON.stringify(output.result, null, 2)
     }
     default: {
       throw new Error(`Can't format response for unknown format '${format}'`)
