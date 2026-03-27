@@ -59,8 +59,8 @@ heyi prompt "Analyze: revenue 100k, costs 60k" --format object --schema "z.objec
 heyi prompt "Analyze top 3 tech companies" --format array --schema "z.object({name:z.string(),founded:z.number(),products:z.array(z.string())})"
 
 # Variable replacement in prompts
-heyi prompt "Preset in {{language}}" --var language="German"
-heyi prompt "Preset in {{input}} and output in {{output}}" --var input="German" --var output="English"
+heyi prompt "Translate to {{language}}" --var language="German"
+heyi prompt "Translate {{input}} to {{output}}" --var input="German" --var output="English"
 
 # Interactive variable prompting (prompts for undefined variables)
 heyi prompt "Translate {{text}} to {{language}}"
