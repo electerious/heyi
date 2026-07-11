@@ -1,10 +1,14 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { Output, generateText } from 'ai'
-import { config } from 'dotenv'
+import path from 'node:path'
+import process from 'node:process'
 import { getFormatSchema } from './utils/schema.js'
 
-// Load environment variables from .env file
-config({ quiet: true })
+try {
+  process.loadEnvFile(path.resolve(process.cwd(), '.env'))
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error
+}
 
 /**
  * Execute an AI prompt with the specified model and format.
