@@ -79,7 +79,7 @@ export const replaceVariables = (prompt, variables = {}) => {
 
   for (const [variable, value] of Object.entries(variables)) {
     // Match both {{variable}} and {{variable description="..."}} or {{variable description='...'}}
-    const pattern = new RegExp(`\\{\\{\\s*${variable}\\s*(?:description\\s*=\\s*['"][^'"]*['"])?\\s*\\}\\}`, 'g')
+    const pattern = new RegExp(String.raw`\{\{\s*${variable}\s*(?:description\s*=\s*['"][^'"]*['"])?\s*\}\}`, 'g')
     result = result.replace(pattern, value)
   }
 
