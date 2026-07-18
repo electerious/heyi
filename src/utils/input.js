@@ -71,7 +71,7 @@ const validateUrl = (url) => {
     }
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error(`Invalid URL format: ${url}`)
+      throw new Error(`Invalid URL format: ${url}`, { cause: error })
     }
     throw error
   }

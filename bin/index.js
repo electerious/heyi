@@ -172,10 +172,7 @@ const mergeOptionsWithPreset = (options, presetContent) => {
 const executePromptAction = async (prompt, flags) => {
   try {
     // Handle stdin input
-    let stdinContent = null
-    if (hasStdinData()) {
-      stdinContent = await readStdin()
-    }
+    const stdinContent = hasStdinData() ? await readStdin() : null
 
     // Validate that we have a prompt
     if (!prompt && !stdinContent) {

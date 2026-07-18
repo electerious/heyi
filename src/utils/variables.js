@@ -40,7 +40,7 @@ export const extractVariables = (prompt) => {
  */
 export const findUndefinedVariables = (prompt, variables = {}) => {
   const allVariables = extractVariables(prompt)
-  return allVariables.filter((v) => !(v.name in variables))
+  return allVariables.filter((v) => !Object.hasOwn(variables, v.name))
 }
 
 /**
@@ -80,7 +80,7 @@ export const replaceVariables = (prompt, variables = {}) => {
   for (const [variable, value] of Object.entries(variables)) {
     // Match both {{variable}} and {{variable description="..."}} or {{variable description='...'}}
     const pattern = new RegExp(String.raw`\{\{\s*${variable}\s*(?:description\s*=\s*['"][^'"]*['"])?\s*\}\}`, 'g')
-    result = result.replace(pattern, value)
+    result = result.replace(pattern, () => value)
   }
 
   return result
