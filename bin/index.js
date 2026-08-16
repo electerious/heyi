@@ -10,7 +10,7 @@ import { loadPreset } from '../src/utils/preset.js'
 import { buildPrompt } from '../src/utils/prompt.js'
 import { findUndefinedVariables, promptForVariable, replaceVariables } from '../src/utils/variables.js'
 
-const DEFAULT_MODEL = 'openai/gpt-4o-mini'
+const DEFAULT_MODEL = 'openai/gpt-5.6-luna'
 const DEFAULT_CRAWLER = 'fetch'
 
 const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.HEYI_MODEL ?? DEFAULT_MODEL]
@@ -64,19 +64,19 @@ const helpText = `
 Examples:
   # Prompts
   $ heyi prompt "What is the capital of France?"
-  $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
+  $ heyi prompt "What is quantum computing?" --model google/gemini-3.5-flash-lite
   $ heyi help prompt
 
   # Presets
   $ heyi preset file.json
-  $ heyi preset file.json --model google/gemini-2.5-pro
+  $ heyi preset file.json --model google/gemini-3.5-flash-lite
   $ heyi help preset
 `
 
 const promptHelpText = `
 Examples:
   $ heyi prompt "What is the capital of France?"
-  $ heyi prompt "What is quantum computing?" --model google/gemini-2.5-pro
+  $ heyi prompt "What is quantum computing?" --model google/gemini-3.5-flash-lite
 
   # Different output formats
   $ heyi prompt "List 5 programming languages" --format array --schema "z.string()"
@@ -84,7 +84,7 @@ Examples:
   $ heyi prompt "List 3 countries" --format array --schema "z.object({name:z.string(),capital:z.string()})"
 
   # Variable replacement
-  $ heyi prompt "Preset in {{language}}" --var language="German"
+  $ heyi prompt "Translate to {{language}}" --var language="German"
 
   # Interactive variable prompting (will prompt for undefined variables)
   $ heyi prompt "Translate {{text}} to {{language}}"
@@ -108,10 +108,10 @@ Examples:
 const presetHelpText = `
 Examples:
   $ heyi preset file.json
-  $ heyi preset file.json --model google/gemini-2.5-pro
+  $ heyi preset file.json --model google/gemini-3.5-flash-lite
 
   # Overwrite options from preset
-  $ heyi preset file.json --model openai/gpt-4
+  $ heyi preset file.json --model openai/gpt-5.6-luna
   $ heyi preset file.json --format array --schema "z.string()"
 
   # Variable replacement

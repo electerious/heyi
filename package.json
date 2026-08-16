@@ -29,7 +29,7 @@
     "lint": "npm run eslint && npm run prettier -- --check",
     "prettier": "prettier --ignore-path .gitignore \"**/*.{js,json,md,yml}\"",
     "start": "./bin/index.js",
-    "test": "npm run lint"
+    "test": "npm run lint && node --test"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^3.0.0",

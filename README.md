@@ -21,7 +21,7 @@ heyi preset [file] [options]
 
 #### Options
 
-- `-m, --model <model>` - AI model to use (default: `openai/gpt-4o-mini`)
+- `-m, --model <model>` - AI model to use (default: `openai/gpt-5.6-luna`)
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
 - `-c, --crawler <crawler>` - Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`)
@@ -44,7 +44,7 @@ heyi preset [file] [options]
 heyi prompt "What is the capital of France?"
 
 # Use a different model
-heyi prompt "Explain quantum computing" --model google/gemini-2.0-flash-exp
+heyi prompt "Explain quantum computing" --model google/gemini-3.5-flash-lite
 
 # Get structured output as array of strings
 heyi prompt "List 5 programming languages" --format array --schema "z.string()"
@@ -107,7 +107,7 @@ echo "Analyze this text" | heyi prompt
 # Preset files
 heyi preset file.json
 heyi preset file.json --var language=german
-heyi preset file.json --model openai/gpt-4o
+heyi preset file.json --model openai/gpt-5.6-luna
 heyi preset file.json --file additional.txt --url https://example.com
 ```
 
@@ -118,7 +118,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 ```json
 {
   "prompt": "Your prompt with {{variables}}",
-  "model": "openai/gpt-4o-mini",
+  "model": "openai/gpt-5.6-luna",
   "format": "array",
   "schema": "z.string()",
   "crawler": "fetch",
@@ -130,7 +130,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 ### Preset Configuration
 
 - **prompt**: The AI prompt to execute. Supports variable replacement using `{{variable}}` syntax.
-- **model** (optional): AI model to use (e.g., `openai/gpt-4o-mini`, `google/gemini-2.0-flash-exp`).
+- **model** (optional): AI model to use (e.g., `openai/gpt-5.6-luna`, `google/gemini-3.5-flash-lite`).
 - **format** (optional): Output format: `string`, `number`, `object`, `array` (default: `string`).
 - **schema** (optional): Zod schema for object/array format (required when format is `object` or `array`).
 - **crawler** (optional): Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`).
@@ -156,7 +156,7 @@ heyi preset explain.json --var topic="quantum computing" --var language="simple 
 ```json
 {
   "prompt": "Analyze and compare the following documents",
-  "model": "google/gemini-2.0-flash-exp",
+  "model": "google/gemini-3.5-flash-lite",
   "files": ["report1.txt", "report2.txt"],
   "urls": ["https://example.com/data.html"]
 }
@@ -192,7 +192,7 @@ heyi preset languages.json
 
 ```sh
 # Override model from preset
-heyi preset file.json --model openai/gpt-4o
+heyi preset file.json --model openai/gpt-5.6-luna
 
 # Override format from preset
 heyi preset file.json --format object --schema "z.object({name:z.string()})"
