@@ -10,6 +10,10 @@ Execute AI prompts directly from your terminal with support for multiple models 
 npm install heyi -g
 ```
 
+## Requirements
+
+- [Node.js](https://nodejs.org/en/) (v24.15.0 or newer)
+
 ## Usage
 
 ### CLI
