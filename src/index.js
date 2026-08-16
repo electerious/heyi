@@ -18,7 +18,7 @@ try {
  * @param {string} options.model - The AI model to use
  * @param {string} options.format - The output format (string, number, object, array)
  * @param {string} options.schema - The Zod schema string for object/array format
- * @returns {Promise<string>} The formatted AI response
+ * @returns {Promise<string|number>} The formatted AI response
  */
 export const executePrompt = async (prompt, options = {}) => {
   const { model, format = 'string', schema } = options
