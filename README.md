@@ -12,7 +12,7 @@ npm install heyi -g
 
 ## Requirements
 
-- [Node.js](https://nodejs.org/en/) (v24.15.0 or newer)
+- [Node.js](https://nodejs.org/en/) (v24 or higher)
 
 ## Usage
 
