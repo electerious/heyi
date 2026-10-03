@@ -10,7 +10,7 @@ import { loadPreset } from '../src/utils/preset.js'
 import { buildPrompt } from '../src/utils/prompt.js'
 import { findUndefinedVariables, promptForVariable, replaceVariables } from '../src/utils/variables.js'
 
-const DEFAULT_MODEL = 'openai/gpt-5.6-luna'
+const DEFAULT_MODEL = 'openai/gpt-6-luna'
 const DEFAULT_CRAWLER = 'fetch'
 
 const modelFlag = ['-m, --model <model>', 'AI model to use', process.env.HEYI_MODEL ?? DEFAULT_MODEL]
@@ -111,7 +111,7 @@ Examples:
   $ heyi preset file.json --model google/gemini-3.5-flash-lite
 
   # Overwrite options from preset
-  $ heyi preset file.json --model openai/gpt-5.6-luna
+  $ heyi preset file.json --model openai/gpt-6-luna
   $ heyi preset file.json --format array --schema "z.string()"
 
   # Variable replacement

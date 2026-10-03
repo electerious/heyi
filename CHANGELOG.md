@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Default AI model changed to `openai/gpt-6-luna`
 - Require Node.js >=24.15.0, dropping support for older Node.js versions
 
 ## [4.0.0] - 2026-08-16

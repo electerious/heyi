@@ -25,7 +25,7 @@ heyi preset [file] [options]
 
 #### Options
 
-- `-m, --model <model>` - AI model to use (default: `openai/gpt-5.6-luna`)
+- `-m, --model <model>` - AI model to use (default: `openai/gpt-6-luna`)
 - `-f, --format <format>` - Output format: `string`, `number`, `object`, `array` (default: `string`)
 - `-s, --schema <schema>` - Zod schema for object/array format (required when format is `object` or `array`)
 - `-c, --crawler <crawler>` - Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`)
@@ -111,7 +111,7 @@ echo "Analyze this text" | heyi prompt
 # Preset files
 heyi preset file.json
 heyi preset file.json --var language=german
-heyi preset file.json --model openai/gpt-5.6-luna
+heyi preset file.json --model openai/gpt-6-luna
 heyi preset file.json --file additional.txt --url https://example.com
 ```
 
@@ -122,7 +122,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 ```json
 {
   "prompt": "Your prompt with {{variables}}",
-  "model": "openai/gpt-5.6-luna",
+  "model": "openai/gpt-6-luna",
   "format": "array",
   "schema": "z.string()",
   "crawler": "fetch",
@@ -134,7 +134,7 @@ Preset files allow you to define reusable configurations with prompts, models, f
 ### Preset Configuration
 
 - **prompt**: The AI prompt to execute. Supports variable replacement using `{{variable}}` syntax.
-- **model** (optional): AI model to use (e.g., `openai/gpt-5.6-luna`, `google/gemini-3.5-flash-lite`).
+- **model** (optional): AI model to use (e.g., `openai/gpt-6-luna`, `google/gemini-3.5-flash-lite`).
 - **format** (optional): Output format: `string`, `number`, `object`, `array` (default: `string`).
 - **schema** (optional): Zod schema for object/array format (required when format is `object` or `array`).
 - **crawler** (optional): Crawler to use for fetching URLs: `fetch`, `chrome` (default: `fetch`).
@@ -196,7 +196,7 @@ heyi preset languages.json
 
 ```sh
 # Override model from preset
-heyi preset file.json --model openai/gpt-5.6-luna
+heyi preset file.json --model openai/gpt-6-luna
 
 # Override format from preset
 heyi preset file.json --format object --schema "z.object({name:z.string()})"
