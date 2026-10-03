@@ -64,19 +64,19 @@ const helpText = `
 Examples:
   # Prompts
   $ heyi prompt "What is the capital of France?"
-  $ heyi prompt "What is quantum computing?" --model google/gemini-3.5-flash-lite
+  $ heyi prompt "What is quantum computing?" --model google/gemini-3.8-flash
   $ heyi help prompt
 
   # Presets
   $ heyi preset file.json
-  $ heyi preset file.json --model google/gemini-3.5-flash-lite
+  $ heyi preset file.json --model google/gemini-3.8-flash
   $ heyi help preset
 `
 
 const promptHelpText = `
 Examples:
   $ heyi prompt "What is the capital of France?"
-  $ heyi prompt "What is quantum computing?" --model google/gemini-3.5-flash-lite
+  $ heyi prompt "What is quantum computing?" --model google/gemini-3.8-flash
 
   # Different output formats
   $ heyi prompt "List 5 programming languages" --format array --schema "z.string()"
@@ -108,7 +108,7 @@ Examples:
 const presetHelpText = `
 Examples:
   $ heyi preset file.json
-  $ heyi preset file.json --model google/gemini-3.5-flash-lite
+  $ heyi preset file.json --model google/gemini-3.8-flash
 
   # Overwrite options from preset
   $ heyi preset file.json --model openai/gpt-6-luna
